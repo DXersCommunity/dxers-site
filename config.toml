@@ -54,7 +54,7 @@ id = "UA-00000000-0"
 [languages]
 
 [languages.en]
-title = "DXers"
+title = "DXers - The HCL DX user's group"
 description = "DXers - The HCL DX user's group"
 languageName ="English"
 # Weight used for sorting.
