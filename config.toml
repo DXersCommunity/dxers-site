@@ -103,6 +103,7 @@ url_latest_version = "https://example.com"
 
 # Repository configuration (URLs for in-page links to opening issues and suggesting changes)
 github_repo = "https://github.com/DXersCommunity/dxers-site"
+github_branch = "dxers-site"
 # An optional link to a related project repo. For example, the sibling repository where your product code lives.
 github_project_repo = "https://github.com/DXersCommunity/dxers-site"
 
@@ -159,7 +160,7 @@ enable = false
 #        desc = "Discussion and help from your fellow users"
 [[params.links.user]]
 	name = "Discord"
-	url = "https://discord.gg/39neKdEk"
+	url = "https://discord.gg/ytsaWHb3gC"
 	icon = "fab fa-discord"
     	 desc = "The community meets and discuss on Discord"
 #[[params.links.user]]
