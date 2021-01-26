@@ -1,6 +1,6 @@
 ---
-title: "HCL Resources"
-linkTitle: "HCL Resources"
+title: "HCL DX (Digital Experience)"
+linkTitle: "HCL DX"
 description: >
   A collection of resources provided by the vendor aka HCL
 ---
