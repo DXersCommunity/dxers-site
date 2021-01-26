@@ -1,4 +1,4 @@
-baseURL = "/"
+baseURL = "https://www.dxers.ug/"
 title = "DXers Community Website"
 
 enableRobotsTXT = true
