@@ -2,7 +2,7 @@
 title: "HCL DX (Digital Experience)"
 linkTitle: "HCL DX"
 description: >
-  A collection of resources provided by the vendor aka HCL
+  HCL Digital Experience builds on the solid reliability and security of IBM WebSphere Portal with dramatically improved, new features for content creators and IT professionals. 
 ---
 
 ## Information sites
