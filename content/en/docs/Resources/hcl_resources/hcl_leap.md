@@ -1,6 +1,7 @@
 ---
 title: "HCL LEAP (Lightweight Enterprise Apps)"
 linkTitle: "HCL LEAP"
+weight: 8
 description: >
     HCL Leap, formerly known as Forms Experience Builder, was acquired from IBM in December of 2017 and has now been released as an HCL product with new features and functionality and with the new brand identity of HCL Leap (standing for Lightweight Enterprise Apps).
 ---
@@ -19,5 +20,6 @@ description: >
 | Type | Resource      |
 |------|---------------|
 | Documentation | <a href="https://hclsw.co/leap-product-documentation" target="_blank" >HCL LEAP Product documentation</a> |
+| Documentation | <a href="https://hclwiki.atlassian.net/wiki/spaces/HL" target="_blank" >HCL LEAP Product Wiki</a> |
 | Support forum |  <a href="https://www.hclleapcommunity.com/forum.html" target="_blank" >HCL Support forums (includes LEAP)</a> |
 | Support Knowledge Base | <a href="https://hclsw.co/leap-support-knowledge-base" target="_blank" >HCL LEAP Support Knowledge Base</a> |
