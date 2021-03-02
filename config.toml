@@ -160,7 +160,7 @@ enable = true
 #        desc = "Discussion and help from your fellow users"
 [[params.links.user]]
 	name = "Discord"
-	url = "https://discord.gg/ytsaWHb3gC"
+	url = "https://discord.gg/RtG4nyCEDX"
 	icon = "fab fa-discord"
     	 desc = "The community meets and discuss on Discord"
 #[[params.links.user]]
