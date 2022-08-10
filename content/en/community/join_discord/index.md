@@ -4,6 +4,6 @@ title: "Join on Discord"
 weight: 20
 type: docs
 description: >
-  Join the conversation in our discord server, [click here to join]({{< ref "https://discord.com/invite/RtG4nyCEDX" >}} "Invite link")
+  Join the conversation in our discord server, <a href="https://discord.com/invite/RtG4nyCEDX" title="Invite link" target="_blank" >click here to join</a>
 ---
-Join the conversation in our discord server, [click here to join]({{< ref "https://discord.com/invite/RtG4nyCEDX" >}} "Invite link")
+Join the conversation in our discord server, <a href="https://discord.com/invite/RtG4nyCEDX" title="Invite link" target="_blank" >click here to join</a>
