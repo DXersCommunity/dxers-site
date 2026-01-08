@@ -3,4 +3,9 @@ public/
 node_modules/
 tech-doc-hugo
 
-sync.bat 
+sync.bat
+
+# Environment variables
+.env
+.env.local
+.env.*.local 

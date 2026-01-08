@@ -1,32 +1,32 @@
-# Documentazione Tecnica - DXers Community Website
+# Technical Documentation - DXers Community Website
 
-## Indice
+## Table of Contents
 
-1. [Introduzione](#introduzione)
-2. [Architettura](#architettura)
-3. [Setup Ambiente di Sviluppo](#setup-ambiente-di-sviluppo)
-4. [Gestione Contenuti](#gestione-contenuti)
-5. [Personalizzazione](#personalizzazione)
+1. [Introduction](#introduction)
+2. [Architecture](#architecture)
+3. [Development Environment Setup](#development-environment-setup)
+4. [Content Management](#content-management)
+5. [Customization](#customization)
 6. [Deployment](#deployment)
-7. [Manutenzione](#manutenzione)
+7. [Maintenance](#maintenance)
 
-## Introduzione
+## Introduction
 
-Il sito web della DXers Community è costruito con Hugo, un generatore di siti statici scritto in Go, noto per le sue prestazioni eccezionali. Utilizza il tema Docsy di Google, specificamente progettato per siti di documentazione tecnica.
+The DXers Community website is built with Hugo, a static site generator written in Go, known for its exceptional performance. It uses Google's Docsy theme, specifically designed for technical documentation sites.
 
-### Caratteristiche Principali
+### Main Features
 
-- ✅ **Velocità**: Build ultra-rapidi grazie a Hugo
-- ✅ **SEO-Friendly**: Siti statici ottimizzati per i motori di ricerca
-- ✅ **Responsive**: Design mobile-first con Bootstrap
-- ✅ **Ricerca**: Supporto Google Custom Search
-- ✅ **Multi-lingua**: Pronto per internazionalizzazione
-- ✅ **Versioning**: Gestione versioni documentazione
-- ✅ **Dark Mode**: Supporto tema scuro (configurabile)
+- ✅ **Speed**: Ultra-fast builds thanks to Hugo
+- ✅ **SEO-Friendly**: Static sites optimized for search engines
+- ✅ **Responsive**: Mobile-first design with Bootstrap
+- ✅ **Search**: Google Custom Search support
+- ✅ **Multi-language**: Ready for internationalization
+- ✅ **Versioning**: Documentation version management
+- ✅ **Dark Mode**: Dark theme support (configurable)
 
-## Architettura
+## Architecture
 
-### Stack Tecnologico
+### Technology Stack
 
 ```
 ┌─────────────────────────────────────┐
@@ -54,198 +54,198 @@ Il sito web della DXers Community è costruito con Hugo, un generatore di siti s
        └────────────────┘
 ```
 
-### Flusso di Build
+### Build Flow
 
-1. **Markdown → HTML**: Hugo converte contenuti Markdown in HTML
-2. **SCSS → CSS**: PostCSS processa SCSS in CSS ottimizzato
-3. **Asset Optimization**: Minificazione HTML/CSS/JS
-4. **Output**: File statici pronti per deployment
+1. **Markdown → HTML**: Hugo converts Markdown content into HTML
+2. **SCSS → CSS**: PostCSS processes SCSS into optimized CSS
+3. **Asset Optimization**: HTML/CSS/JS minification
+4. **Output**: Static files ready for deployment
 
-## Setup Ambiente di Sviluppo
+## Development Environment Setup
 
-### Prerequisiti
+### Prerequisites
 
 #### 1. Hugo Extended
 
-**IMPORTANTE**: Serve la versione **Extended**, non quella standard!
+**IMPORTANT**: The **Extended** version is required, not the standard one!
 
 ```bash
-# Verifica installazione
+# Verify installation
 hugo version
 
-# Output atteso:
+# Expected output:
 # hugo v0.154.1+extended linux/amd64
 ```
 
-**Installazione:**
+**Installation:**
 
 ##### Linux
 ```bash
-# Download ultima versione Extended
+# Download latest Extended version
 VERSION=0.154.1
 wget https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_extended_${VERSION}_linux-amd64.tar.gz
 
-# Estrazione
+# Extract
 tar -xzf hugo_extended_${VERSION}_linux-amd64.tar.gz
 
-# Installazione
+# Install
 sudo mv hugo /usr/local/bin/
 sudo chmod +x /usr/local/bin/hugo
 
-# Verifica
+# Verify
 hugo version
 ```
 
 ##### macOS
 ```bash
-# Con Homebrew
+# With Homebrew
 brew install hugo
 ```
 
 ##### Windows
 ```powershell
-# Con Chocolatey
+# With Chocolatey
 choco install hugo-extended -y
 
-# Con Scoop
+# With Scoop
 scoop install hugo-extended
 
-# Con Winget
+# With Winget
 winget install Hugo.Hugo.Extended
 ```
 
-#### 2. Node.js e npm
+#### 2. Node.js and npm
 
 ```bash
-# Verifica installazione
-node --version  # v18.x o superiore (LTS)
-npm --version   # 9.x o superiore
+# Verify installation
+node --version  # v18.x or higher (LTS)
+npm --version   # 9.x or higher
 
-# Installa dipendenze progetto
+# Install project dependencies
 npm install
 ```
 
 #### 3. Git
 
 ```bash
-# Clone repository con submodules
+# Clone repository with submodules
 git clone --recurse-submodules https://github.com/DXersCommunity/dxers-site.git
 cd dxers-site
 
-# Se già clonato, inizializza submodules
+# If already cloned, initialize submodules
 git submodule update --init --recursive
 ```
 
-### Prima Configurazione
+### Initial Configuration
 
 ```bash
 # 1. Clone repository
 git clone --recurse-submodules https://github.com/DXersCommunity/dxers-site.git
 cd dxers-site
 
-# 2. Installa dipendenze npm
+# 2. Install npm dependencies
 npm install
 
-# 3. Avvia server di sviluppo
+# 3. Start development server
 hugo server
 
-# 4. Apri browser
+# 4. Open browser
 # http://localhost:1313
 ```
 
-## Gestione Contenuti
+## Content Management
 
-### Struttura Contenuti
+### Content Structure
 
 ```
 content/en/
 ├── _index.html              # Homepage
-├── search.md                # Pagina ricerca
-├── community/               # Sezione community
-│   ├── _index.md           # Index community
-│   ├── join_discord/       # Come unirsi a Discord
-│   ├── code_of_conduct/    # Codice di condotta
-│   └── join_meetings/      # Meeting della community
-└── docs/                    # Documentazione
-    ├── _index.md           # Index docs
-    ├── Resources/          # Risorse
+├── search.md                # Search page
+├── community/               # Community section
+│   ├── _index.md           # Community index
+│   ├── join_discord/       # How to join Discord
+│   ├── code_of_conduct/    # Code of conduct
+│   └── join_meetings/      # Community meetings
+└── docs/                    # Documentation
+    ├── _index.md           # Docs index
+    ├── Resources/          # Resources
     │   ├── community_resources/
     │   └── hcl_resources/
     └── Contribution guidelines/
 ```
 
-### Creare Nuova Pagina
+### Creating New Page
 
-#### 1. Pagina Semplice
+#### 1. Simple Page
 
 ```bash
-# Crea nuova pagina
-hugo new content/en/docs/nuova-guida.md
+# Create new page
+hugo new content/en/docs/new-guide.md
 ```
 
-Contenuto generato:
+Generated content:
 ```markdown
 ---
-title: "Nuova Guida"
+title: "New Guide"
 date: 2026-01-08
 draft: true
 ---
 
-# Contenuto qui
+# Content here
 ```
 
-#### 2. Sezione con Index
+#### 2. Section with Index
 
 ```bash
-# Crea nuova sezione
-mkdir -p content/en/docs/nuova-sezione
-hugo new content/en/docs/nuova-sezione/_index.md
+# Create new section
+mkdir -p content/en/docs/new-section
+hugo new content/en/docs/new-section/_index.md
 ```
 
 ### Front Matter
 
-Ogni pagina Markdown ha metadati YAML all'inizio:
+Each Markdown page has YAML metadata at the beginning:
 
 ```yaml
 ---
-title: "Titolo Pagina"
-description: "Descrizione breve per SEO"
+title: "Page Title"
+description: "Short description for SEO"
 date: 2026-01-08
-weight: 10              # Ordine nel menu (più basso = prima)
-draft: false            # true = non pubblicato
+weight: 10              # Menu order (lower = first)
+draft: false            # true = not published
 ---
 ```
 
-#### Front Matter Avanzato
+#### Advanced Front Matter
 
 ```yaml
 ---
-title: "Guida Avanzata"
-linkTitle: "Guida"     # Nome nel menu (più corto)
-description: "Descrizione SEO"
+title: "Advanced Guide"
+linkTitle: "Guide"     # Menu name (shorter)
+description: "SEO description"
 date: 2026-01-08
 weight: 20
-type: docs              # Tipo di pagina
+type: docs              # Page type
 categories:
   - Tutorial
-  - Guide
+  - Guides
 tags:
   - hcl-dx
   - docsy
 ---
 ```
 
-### Shortcodes Docsy
+### Docsy Shortcodes
 
 #### Alert
 
 ```markdown
-{{< alert title="Attenzione" color="warning" >}}
-Questo è un messaggio di avviso importante!
+{{< alert title="Warning" color="warning" >}}
+This is an important warning message!
 {{< /alert >}}
 ```
 
-Colori disponibili: `primary`, `secondary`, `success`, `danger`, `warning`, `info`, `light`, `dark`
+Available colors: `primary`, `secondary`, `success`, `danger`, `warning`, `info`, `light`, `dark`
 
 #### Tabs
 
@@ -268,54 +268,54 @@ choco install hugo-extended
 ```markdown
 {{< cardpane >}}
 {{< card header="Feature 1" >}}
-Descrizione feature
+Feature description
 {{< /card >}}
 {{< card header="Feature 2" >}}
-Altra descrizione
+Another description
 {{< /card >}}
 {{< /cardpane >}}
 ```
 
-## Personalizzazione
+## Customization
 
-### SCSS Personalizzato
+### Custom SCSS
 
 File: `assets/scss/_variables_project.scss`
 
 ```scss
 /*
- * Personalizzazioni variabili Bootstrap e Docsy
+ * Bootstrap and Docsy variable customizations
  */
 
-// Colori primari
+// Primary colors
 $primary: #007bff;
 $secondary: #6c757d;
 
-// Font
+// Fonts
 $font-family-sans-serif: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-// Dimensioni
+// Sizes
 $navbar-height: 60px;
 ```
 
-### Layout Personalizzati
+### Custom Layouts
 
 Directory: `layouts/`
 
-#### Override Singola Pagina
+#### Override Single Page
 
 ```
 layouts/
-├── 404.html              # Pagina 404 personalizzata
+├── 404.html              # Custom 404 page
 ├── _default/
-│   ├── baseof.html      # Template base
-│   └── single.html      # Template pagina singola
+│   ├── baseof.html      # Base template
+│   └── single.html      # Single page template
 └── partials/
-    ├── header.html      # Header personalizzato
-    └── footer.html      # Footer personalizzato
+    ├── header.html      # Custom header
+    └── footer.html      # Custom footer
 ```
 
-### Configurazione Menu
+### Menu Configuration
 
 File: `config.toml`
 
@@ -333,10 +333,10 @@ File: `config.toml`
 
 ## Deployment
 
-### Build Produzione
+### Production Build
 
 ```bash
-# Build con minificazione
+# Build with minification
 hugo --minify
 
 # Output in: ./public/
@@ -344,7 +344,7 @@ hugo --minify
 
 ### CloudFlare Pages
 
-#### Configurazione
+#### Configuration
 
 1. **Build command**: `hugo --minify`
 2. **Build output directory**: `public`
@@ -355,10 +355,10 @@ hugo --minify
 #### Build Settings
 
 ```toml
-# CloudFlare Pages rileva automaticamente Hugo
-# Ma si può specificare la versione
+# CloudFlare Pages automatically detects Hugo
+# But you can specify the version
 
-# Crea file: .hugo-version
+# Create file: .hugo-version
 0.154.1
 ```
 
@@ -369,59 +369,59 @@ File: `deploy.sh`
 ```bash
 #!/bin/bash
 
-# Build sito
+# Build site
 hugo --minify
 
-# Deploy (customizza per tuo hosting)
+# Deploy (customize for your hosting)
 rsync -avz --delete public/ user@server:/var/www/dxers/
 ```
 
-## Manutenzione
+## Maintenance
 
-### Aggiornamento Hugo
+### Hugo Update
 
 ```bash
-# Verifica versione corrente
+# Check current version
 hugo version
 
-# Download nuova versione
-# Vedi sezione Setup > Hugo Extended
+# Download new version
+# See Setup > Hugo Extended section
 
-# Test dopo aggiornamento
+# Test after update
 hugo server
 ```
 
-### Aggiornamento Tema Docsy
+### Docsy Theme Update
 
 ```bash
-# Aggiorna submodule
+# Update submodule
 git submodule update --remote themes/docsy
 
 # Test
 hugo server
 
-# Commit aggiornamento
+# Commit update
 git add themes/docsy
 git commit -m "chore: update Docsy theme"
 ```
 
-### Aggiornamento Dipendenze npm
+### npm Dependencies Update
 
 ```bash
-# Verifica outdated
+# Check outdated
 npm outdated
 
-# Aggiorna
+# Update
 npm update
 
-# Per major updates
+# For major updates
 npm install autoprefixer@latest postcss-cli@latest --save-dev
 ```
 
 ### Backup
 
 ```bash
-# Backup completo
+# Full backup
 tar -czf dxers-site-backup-$(date +%Y%m%d).tar.gz \
   --exclude=node_modules \
   --exclude=.git \
@@ -432,33 +432,33 @@ tar -czf dxers-site-backup-$(date +%Y%m%d).tar.gz \
 ### Performance Monitoring
 
 ```bash
-# Analisi tempo di build
+# Build time analysis
 hugo --templateMetrics --templateMetricsHints
 
-# Analisi dimensioni output
+# Output size analysis
 du -sh public/
 find public/ -type f -name "*.html" | wc -l
 ```
 
 ## Testing
 
-### Test Locale
+### Local Testing
 
 ```bash
-# Server di sviluppo con draft
+# Development server with drafts
 hugo server -D
 
-# Server con binding esterno
+# Server with external binding
 hugo server --bind 0.0.0.0
 
-# Server con live reload disabilitato
+# Server with live reload disabled
 hugo server --disableLiveReload
 ```
 
-### Validazione
+### Validation
 
 ```bash
-# HTML Validator (richiede npm package html-validate)
+# HTML Validator (requires npm package html-validate)
 npm install -g html-validate
 html-validate public/**/*.html
 
@@ -468,81 +468,81 @@ wget --spider -r -nd -nv -l 5 http://localhost:1313/
 
 ## Troubleshooting
 
-### Problema: Hugo non trovato
+### Problem: Hugo not found
 
 ```bash
-# Verifica PATH
+# Check PATH
 echo $PATH
 
-# Verifica installazione
+# Check installation
 which hugo
 
-# Reinstalla
-# Vedi sezione Setup > Hugo Extended
+# Reinstall
+# See Setup > Hugo Extended section
 ```
 
-### Problema: Tema Docsy non carica
+### Problem: Docsy theme not loading
 
 ```bash
-# Inizializza submodules
+# Initialize submodules
 git submodule update --init --recursive
 
-# Verifica submodule
+# Check submodule
 git submodule status
 ```
 
-### Problema: Errori PostCSS
+### Problem: PostCSS errors
 
 ```bash
-# Reinstalla dipendenze
+# Reinstall dependencies
 rm -rf node_modules package-lock.json
 npm install
 
-# Verifica Node.js version
-node --version  # Deve essere LTS (v18+)
+# Check Node.js version
+node --version  # Must be LTS (v18+)
 ```
 
-### Problema: Build lento
+### Problem: Slow build
 
 ```bash
-# Disabilita GitInfo (temporaneo)
+# Disable GitInfo (temporary)
 hugo --ignoreCache --disableKinds taxonomy,term
 
-# Pulisci cache
+# Clean cache
 hugo --cleanDestinationDir
 ```
 
 ## Best Practices
 
-1. **Commits**: Usa Conventional Commits
-   - `feat:` nuove feature
-   - `fix:` bug fix
-   - `docs:` documentazione
-   - `chore:` manutenzione
+1. **Commits**: Use Conventional Commits
+   - `feat:` new features
+   - `fix:` bug fixes
+   - `docs:` documentation
+   - `chore:` maintenance
 
-2. **Branch**: Feature branches per nuove funzionalità
+2. **Branches**: Feature branches for new functionality
    ```bash
-   git checkout -b feat/nome-feature
+   git checkout -b feat/feature-name
    ```
 
-3. **Testing**: Testa sempre localmente prima del push
+3. **Testing**: Always test locally before pushing
    ```bash
    hugo server
    ```
 
-4. **Build**: Verifica build produzione
+4. **Build**: Verify production build
    ```bash
    hugo --minify
    ```
 
-5. **Submodules**: Aggiorna regolarmente
+5. **Submodules**: Update regularly
    ```bash
    git submodule update --remote
    ```
 
 ---
 
-**Riferimenti:**
+**References:**
 - [Hugo Documentation](https://gohugo.io/documentation/)
 - [Docsy Documentation](https://www.docsy.dev/docs/)
 - [DXers Community](https://www.dxers.ug/)

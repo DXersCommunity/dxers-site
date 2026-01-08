@@ -1,29 +1,29 @@
 # CLAUDE.md - DXers Community Website
 
-## Panoramica Progetto
+## Project Overview
 
-**DXers Community Website** è il sito web ufficiale della DXers Community, il gruppo utenti di HCL DX (Digital Experience).
+**DXers Community Website** is the official website of the DXers Community, the HCL DX (Digital Experience) users group.
 
 - **URL**: https://www.dxers.ug/
 - **Repository**: https://github.com/DXersCommunity/dxers-site
-- **Branch principale**: `dxers-site`
-- **Tipo**: Sito web statico di documentazione tecnica
+- **Main branch**: `dxers-site`
+- **Type**: Technical documentation static website
 
-## Stack Tecnologico
+## Technology Stack
 
 ### Hugo Static Site Generator
-- **Versione raccomandata**: Hugo Extended **0.154.1** (ultima versione - gennaio 2026)
-- **Versione minima richiesta**: Hugo Extended **0.146.0+**
-- **IMPORTANTE**: È necessaria la versione **Extended** di Hugo per il supporto SCSS
+- **Recommended version**: Hugo Extended **0.154.1** (latest version - January 2026)
+- **Minimum required version**: Hugo Extended **0.146.0+**
+- **IMPORTANT**: The **Extended** version of Hugo is required for SCSS support
 - **Download**: https://gohugo.io/installation/
 
-### Tema Docsy
-- **Tema**: [Docsy](https://github.com/google/docsy) di Google
-- **Installazione**: Git submodule in `themes/docsy`
-- **Documentazione**: https://www.docsy.dev/docs/
-- **Versione Docsy**: v0.12.0+ (richiede Hugo 0.146.0+)
+### Docsy Theme
+- **Theme**: [Docsy](https://github.com/google/docsy) by Google
+- **Installation**: Git submodule in `themes/docsy`
+- **Documentation**: https://www.docsy.dev/docs/
+- **Docsy version**: v0.12.0+ (requires Hugo 0.146.0+)
 
-### Dipendenze Node.js
+### Node.js Dependencies
 ```json
 {
   "devDependencies": {
@@ -33,106 +33,106 @@
 }
 ```
 
-## Struttura del Progetto
+## Project Structure
 
 ```
 dxers-site/
 ├── assets/
-│   └── scss/                    # SCSS personalizzati
+│   └── scss/                    # Custom SCSS
 │       └── _variables_project.scss
 ├── content/
-│   └── en/                      # Contenuti in inglese
-│       ├── community/           # Pagine community
+│   └── en/                      # English content
+│       ├── community/           # Community pages
 │       │   ├── join_discord/
 │       │   ├── code_of_conduct/
 │       │   └── join_meetings/
-│       └── docs/                # Documentazione
+│       └── docs/                # Documentation
 │           ├── Resources/
 │           │   ├── community_resources/
 │           │   └── hcl_resources/
 │           └── Contribution guidelines/
-├── layouts/                     # Layout personalizzati Hugo
+├── layouts/                     # Custom Hugo layouts
 │   └── 404.html
 ├── themes/
-│   └── docsy/                   # Tema Docsy (submodule)
-├── config.toml                  # Configurazione Hugo principale
-├── package.json                 # Dipendenze Node.js
-└── deploy.sh                    # Script di deployment
+│   └── docsy/                   # Docsy theme (submodule)
+├── config.toml                  # Main Hugo configuration
+├── package.json                 # Node.js dependencies
+└── deploy.sh                    # Deployment script
 ```
 
-## Prerequisiti per lo Sviluppo
+## Development Prerequisites
 
 ### 1. Hugo Extended
-**CRITICO**: Installare la versione Extended di Hugo, non quella standard.
+**CRITICAL**: Install the Extended version of Hugo, not the standard one.
 
 ```bash
-# Verifica versione installata
+# Check installed version
 hugo version
 
-# Output atteso:
+# Expected output:
 # hugo v0.154.1+extended linux/amd64 ...
 ```
 
-### 2. Node.js e npm
-- **Versione richiesta**: Node.js LTS (Long Term Support)
-- **Utilizzo**: Per PostCSS e Autoprefixer
+### 2. Node.js and npm
+- **Required version**: Node.js LTS (Long Term Support)
+- **Usage**: For PostCSS and Autoprefixer
 
 ```bash
-# Installa dipendenze
+# Install dependencies
 npm install
 ```
 
 ### 3. Git Submodules
-Il tema Docsy è installato come Git submodule:
+The Docsy theme is installed as a Git submodule:
 
 ```bash
-# Clone con submodules
+# Clone with submodules
 git clone --recurse-submodules https://github.com/DXersCommunity/dxers-site.git
 
-# Se già clonato, inizializza submodules
+# If already cloned, initialize submodules
 git submodule update --init --recursive
 ```
 
-### 4. Go (Opzionale)
-Se si vuole usare Docsy come Hugo Module invece di submodule.
+### 4. Go (Optional)
+If you want to use Docsy as a Hugo Module instead of a submodule.
 
-## Comandi Principali
+## Main Commands
 
-### Sviluppo Locale
+### Local Development
 
 ```bash
-# Avvia server di sviluppo
+# Start development server
 hugo server
 
-# Avvia con draft e future content
+# Start with draft and future content
 hugo server -D -F
 
-# Server accessibile su http://localhost:1313
+# Server accessible at http://localhost:1313
 ```
 
-### Build per Produzione
+### Production Build
 
 ```bash
-# Build sito statico
+# Build static site
 hugo
 
 # Output in: ./public/
 ```
 
-### Build con PostCSS (per deployment)
+### Build with PostCSS (for deployment)
 
 ```bash
-# Prima installa dipendenze
+# First install dependencies
 npm install
 
-# Poi build
+# Then build
 hugo --minify
 ```
 
 ### Docker
 
 ```bash
-# Build immagine Docker
+# Build Docker image
 docker build -f dev.Dockerfile -t dxers-site-dev:latest .
 
 # Run container
@@ -141,9 +141,9 @@ docker run --publish 1313:1313 --detach \
   dxers-site-dev:latest
 ```
 
-## Configurazione (config.toml)
+## Configuration (config.toml)
 
-### Configurazioni Chiave
+### Key Settings
 
 - **baseURL**: `https://www.dxers.ug/`
 - **title**: `DXers Community Website`
@@ -151,197 +151,197 @@ docker run --publish 1313:1313 --detach \
 - **contentDir**: `content/en`
 - **defaultContentLanguage**: `en`
 
-### Link Social
+### Social Links
 
 - **Discord**: https://discord.gg/RtG4nyCEDX
 - **GitHub**: https://github.com/DXersCommunity/dxers-site
 
-## Aggiornamento Hugo
+## Hugo Update
 
-### Versione Corrente
-**Hugo non è attualmente installato** nel sistema di sviluppo.
+### Current Version
+**Hugo is not currently installed** in the development system.
 
-### Versioni Disponibili (Gennaio 2026)
-- **Ultima versione**: Hugo Extended **0.154.1**
-- **Versione stabile consigliata**: Hugo Extended **0.146.0+**
+### Available Versions (January 2026)
+- **Latest version**: Hugo Extended **0.154.1**
+- **Recommended stable version**: Hugo Extended **0.146.0+**
 
-### Perché Aggiornare?
+### Why Update?
 
-**Nuove funzionalità Hugo 2024-2025:**
-- LaTeX e TeX typesetting
-- Server-side math rendering con KaTeX
-- Streaming builds per milioni di pagine
-- Content adapters per dati remoti
-- Supporto Tailwind CSS migliorato
-- Callout Obsidian-style
+**New Hugo features 2024-2025:**
+- LaTeX and TeX typesetting
+- Server-side math rendering with KaTeX
+- Streaming builds for millions of pages
+- Content adapters for remote data
+- Improved Tailwind CSS support
+- Obsidian-style callouts
 
-### Come Aggiornare
+### How to Update
 
 #### Linux
 ```bash
-# Download versione Extended
+# Download Extended version
 wget https://github.com/gohugoio/hugo/releases/download/v0.154.1/hugo_extended_0.154.1_linux-amd64.tar.gz
 
-# Estrai
+# Extract
 tar -xzf hugo_extended_0.154.1_linux-amd64.tar.gz
 
-# Sposta in PATH
+# Move to PATH
 sudo mv hugo /usr/local/bin/
 
-# Verifica
+# Verify
 hugo version
 ```
 
 #### macOS
 ```bash
-# Con Homebrew
+# With Homebrew
 brew install hugo
 ```
 
 #### Windows
 ```powershell
-# Con Chocolatey
+# With Chocolatey
 choco install hugo-extended
 
-# O con Scoop
+# Or with Scoop
 scoop install hugo-extended
 ```
 
-### Raccomandazioni
+### Recommendations
 
-1. ✅ **AGGIORNARE a Hugo Extended 0.154.1**
-   - Compatibile con Docsy v0.12.0+
-   - Include tutte le ultime funzionalità
-   - Migliori prestazioni
+1. ✅ **UPDATE to Hugo Extended 0.154.1**
+   - Compatible with Docsy v0.12.0+
+   - Includes all latest features
+   - Better performance
    - Bug fixes
 
-2. ✅ **Testare dopo l'aggiornamento**
+2. ✅ **Test after update**
    ```bash
-   # Test locale
+   # Local test
    hugo server
 
    # Build test
    hugo --minify
    ```
 
-3. ✅ **Verificare compatibilità tema Docsy**
+3. ✅ **Verify Docsy theme compatibility**
    ```bash
-   # Aggiorna submodule Docsy
+   # Update Docsy submodule
    git submodule update --remote themes/docsy
    ```
 
-4. ⚠️ **Attenzione Breaking Changes**
-   - Hugo 0.146.0+ ha cambiato alcune API
-   - Testare tutte le pagine prima del deployment
-   - Verificare che PostCSS funzioni correttamente
+4. ⚠️ **Beware of Breaking Changes**
+   - Hugo 0.146.0+ changed some APIs
+   - Test all pages before deployment
+   - Verify PostCSS works correctly
 
-## Workflow di Sviluppo
+## Development Workflow
 
-### 1. Creare Nuova Feature Branch
+### 1. Create New Feature Branch
 ```bash
-git checkout -b feature/nome-feature
+git checkout -b feature/feature-name
 ```
 
-### 2. Sviluppo Locale
+### 2. Local Development
 ```bash
 hugo server -D
 ```
 
-### 3. Test e Verifica
-- Verifica tutti i link
+### 3. Test and Verify
+- Check all links
 - Test responsive design
-- Valida HTML/CSS
-- Check accessibilità
+- Validate HTML/CSS
+- Check accessibility
 
-### 4. Build Produzione
+### 4. Production Build
 ```bash
 npm install
 hugo --minify
 ```
 
-### 5. Commit e Push
+### 5. Commit and Push
 ```bash
 git add .
-git commit -m "feat: descrizione feature"
-git push origin feature/nome-feature
+git commit -m "feat: feature description"
+git push origin feature/feature-name
 ```
 
 ### 6. Pull Request
-Creare PR verso branch `dxers-site`
+Create PR to `dxers-site` branch
 
 ## Deployment
 
-### Ambiente Produzione
-- **Piattaforma**: CloudFlare Pages
-- **Branch deploy**: `dxers-site`
+### Production Environment
+- **Platform**: CloudFlare Pages
+- **Deploy branch**: `dxers-site`
 - **Build command**: `hugo --minify`
 - **Output directory**: `public/`
 
-### Script Deployment
+### Deployment Script
 ```bash
-# Usa lo script deploy.sh
+# Use the deploy.sh script
 ./deploy.sh
 ```
 
 ## Troubleshooting
 
-### Hugo non trovato
+### Hugo not found
 ```bash
-# Installa Hugo Extended
-# Vedi sezione "Come Aggiornare"
+# Install Hugo Extended
+# See "How to Update" section
 ```
 
-### Tema Docsy mancante
+### Missing Docsy theme
 ```bash
-# Inizializza submodules
+# Initialize submodules
 git submodule update --init --recursive
 ```
 
-### Errori PostCSS
+### PostCSS errors
 ```bash
-# Reinstalla dipendenze
+# Reinstall dependencies
 rm -rf node_modules package-lock.json
 npm install
 ```
 
-### Build fallisce
+### Build fails
 ```bash
-# Verifica versione Hugo Extended
+# Check Hugo Extended version
 hugo version | grep extended
 
-# Se non è Extended, reinstalla Hugo Extended
+# If not Extended, reinstall Hugo Extended
 ```
 
-## Risorse Utili
+## Useful Resources
 
 ### Hugo
-- [Documentazione Hugo](https://gohugo.io/documentation/)
+- [Hugo Documentation](https://gohugo.io/documentation/)
 - [Hugo Quick Start](https://gohugo.io/getting-started/quick-start/)
 - [Hugo Forum](https://discourse.gohugo.io/)
 
 ### Docsy
-- [Documentazione Docsy](https://www.docsy.dev/docs/)
+- [Docsy Documentation](https://www.docsy.dev/docs/)
 - [Docsy GitHub](https://github.com/google/docsy)
 - [Docsy Example](https://github.com/google/docsy-example)
 
-### Comunità DXers
+### DXers Community
 - [Discord](https://discord.gg/RtG4nyCEDX)
 - [GitHub](https://github.com/DXersCommunity)
-- [Sito Web](https://www.dxers.ug/)
+- [Website](https://www.dxers.ug/)
 
-## Contribuire
+## Contributing
 
-Vedi [CONTRIBUTING.md](CONTRIBUTING.md) per le linee guida di contribuzione.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ### Code of Conduct
-Vedi [Code of Conduct](content/en/community/code_of_conduct/index.md)
+See [Code of Conduct](content/en/community/code_of_conduct/index.md)
 
-## Licenza
+## License
 
-Vedi [LICENSE](LICENSE) per i dettagli.
+See [LICENSE](LICENSE) for details.
 
 ---
 
-**Ultimo aggiornamento**: 2026-01-08
-**Versione Hugo consigliata**: 0.154.1 Extended
-**Versione Hugo minima**: 0.146.0 Extended
+**Last updated**: 2026-01-08
+**Recommended Hugo version**: 0.154.1 Extended
+**Minimum Hugo version**: 0.146.0 Extended

@@ -1,201 +1,201 @@
-# Guida Aggiornamento Hugo 2026
+# Hugo Update Guide 2026
 
 ## Executive Summary
 
-**Raccomandazione**: ✅ **AGGIORNARE a Hugo Extended 0.154.1**
+**Recommendation**: ✅ **UPDATE to Hugo Extended 0.154.1**
 
-### Status Corrente
-- ❌ Hugo **NON installato** nel sistema di sviluppo
-- ⚠️ Versione richiesta minima: **0.146.0 Extended**
-- ✅ Versione disponibile: **0.154.1 Extended** (gennaio 2026)
+### Current Status
+- ❌ Hugo **NOT installed** in development system
+- ⚠️ Minimum required version: **0.146.0 Extended**
+- ✅ Available version: **0.154.1 Extended** (January 2026)
 
-### Azione Richiesta
-**Installare Hugo Extended 0.154.1** per garantire:
-- Compatibilità con tema Docsy v0.12.0+
-- Accesso alle ultime funzionalità
-- Migliori prestazioni di build
-- Sicurezza e bug fixes
-
----
-
-## Analisi Versioni
-
-### Hugo 0.154.1 (Gennaio 2026) - RACCOMANDATO ✅
-
-**Data Rilascio**: Gennaio 2026
-**Status**: Stabile, ultima versione disponibile
-
-#### Vantaggi
-- ✅ Completamente compatibile con Docsy
-- ✅ Build più veloci (streaming builds)
-- ✅ Supporto LaTeX/TeX per documentazione matematica
-- ✅ Math rendering server-side con KaTeX
-- ✅ Content adapters per dati remoti
-- ✅ Miglioramenti Tailwind CSS
-- ✅ Callout Obsidian-style
-- ✅ Tutte le patch di sicurezza
-
-#### Svantaggi
-- ⚠️ Possibili breaking changes rispetto a versioni molto vecchie
-- ⚠️ Richiede testing completo dopo installazione
-
-### Hugo 0.146.0 (Versione Minima)
-
-**Data Rilascio**: 2024
-**Status**: Versione minima richiesta da Docsy v0.12.0
-
-#### Vantaggi
-- ✅ Compatibilità garantita con Docsy
-- ✅ Stabile e testata
-
-#### Svantaggi
-- ❌ Mancano funzionalità recenti
-- ❌ Prestazioni inferiori
-- ❌ Mancano patch di sicurezza recenti
-
-### Conclusione: AGGIORNARE a 0.154.1 ✅
+### Required Action
+**Install Hugo Extended 0.154.1** to ensure:
+- Compatibility with Docsy theme v0.12.0+
+- Access to latest features
+- Better build performance
+- Security and bug fixes
 
 ---
 
-## Checklist Pre-Aggiornamento
+## Version Analysis
 
-Prima di installare Hugo, verifica:
+### Hugo 0.154.1 (January 2026) - RECOMMENDED ✅
 
-- [ ] **Backup completo progetto**
+**Release Date**: January 2026
+**Status**: Stable, latest available version
+
+#### Advantages
+- ✅ Fully compatible with Docsy
+- ✅ Faster builds (streaming builds)
+- ✅ LaTeX/TeX support for mathematical documentation
+- ✅ Server-side math rendering with KaTeX
+- ✅ Content adapters for remote data
+- ✅ Tailwind CSS improvements
+- ✅ Obsidian-style callouts
+- ✅ All security patches
+
+#### Disadvantages
+- ⚠️ Possible breaking changes compared to very old versions
+- ⚠️ Requires complete testing after installation
+
+### Hugo 0.146.0 (Minimum Version)
+
+**Release Date**: 2024
+**Status**: Minimum version required by Docsy v0.12.0
+
+#### Advantages
+- ✅ Guaranteed compatibility with Docsy
+- ✅ Stable and tested
+
+#### Disadvantages
+- ❌ Missing recent features
+- ❌ Lower performance
+- ❌ Missing recent security patches
+
+### Conclusion: UPDATE to 0.154.1 ✅
+
+---
+
+## Pre-Update Checklist
+
+Before installing Hugo, verify:
+
+- [ ] **Complete project backup**
   ```bash
-  git status  # Assicurati che non ci siano modifiche non committate
+  git status  # Make sure there are no uncommitted changes
   ```
 
-- [ ] **Node.js installato** (LTS v18+)
+- [ ] **Node.js installed** (LTS v18+)
   ```bash
   node --version
   npm --version
   ```
 
-- [ ] **Dipendenze npm installate**
+- [ ] **npm dependencies installed**
   ```bash
   npm install
   ```
 
-- [ ] **Git submodules aggiornati**
+- [ ] **Git submodules updated**
   ```bash
   git submodule update --init --recursive
   ```
 
 ---
 
-## Procedura di Installazione
+## Installation Procedure
 
-### IMPORTANTE: Versione Extended
+### IMPORTANT: Extended Version
 
-⚠️ **CRITICO**: Installare **Hugo Extended**, NON la versione standard!
+⚠️ **CRITICAL**: Install **Hugo Extended**, NOT the standard version!
 
-Il tema Docsy richiede Hugo Extended per il supporto SCSS/SASS.
+The Docsy theme requires Hugo Extended for SCSS/SASS support.
 
-### Linux (Raccomandato per Server)
+### Linux (Recommended for Servers)
 
 ```bash
-# 1. Definisci versione
+# 1. Define version
 HUGO_VERSION=0.154.1
 
 # 2. Download Hugo Extended
 cd /tmp
 wget https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz
 
-# 3. Estrai archivio
+# 3. Extract archive
 tar -xzf hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz
 
-# 4. Installa in /usr/local/bin
+# 4. Install in /usr/local/bin
 sudo mv hugo /usr/local/bin/
 sudo chmod +x /usr/local/bin/hugo
 
-# 5. Verifica installazione
+# 5. Verify installation
 hugo version
 
-# Output atteso:
+# Expected output:
 # hugo v0.154.1+extended linux/amd64 BuildDate=2026-xx-xx
 ```
 
 ### macOS
 
-#### Con Homebrew (Raccomandato)
+#### With Homebrew (Recommended)
 
 ```bash
-# Installa Hugo Extended
+# Install Hugo Extended
 brew install hugo
 
-# Verifica versione
+# Verify version
 hugo version
 
-# Se version < 0.154.1, aggiorna
+# If version < 0.154.1, update
 brew upgrade hugo
 ```
 
-#### Download Manuale
+#### Manual Download
 
 ```bash
-# 1. Download per macOS (ARM - Apple Silicon)
+# 1. Download for macOS (ARM - Apple Silicon)
 cd /tmp
 wget https://github.com/gohugoio/hugo/releases/download/v0.154.1/hugo_extended_0.154.1_darwin-universal.tar.gz
 
-# 2. Estrai
+# 2. Extract
 tar -xzf hugo_extended_0.154.1_darwin-universal.tar.gz
 
-# 3. Installa
+# 3. Install
 sudo mv hugo /usr/local/bin/
 sudo chmod +x /usr/local/bin/hugo
 
-# 4. Verifica
+# 4. Verify
 hugo version
 ```
 
 ### Windows
 
-#### Con Chocolatey (Raccomandato)
+#### With Chocolatey (Recommended)
 
 ```powershell
-# Installa Hugo Extended
+# Install Hugo Extended
 choco install hugo-extended -y
 
-# Verifica
+# Verify
 hugo version
 ```
 
-#### Con Scoop
+#### With Scoop
 
 ```powershell
-# Installa Scoop se non presente
+# Install Scoop if not present
 # https://scoop.sh
 
-# Installa Hugo Extended
+# Install Hugo Extended
 scoop install hugo-extended
 
-# Verifica
+# Verify
 hugo version
 ```
 
-#### Con Winget
+#### With Winget
 
 ```powershell
-# Installa Hugo Extended
+# Install Hugo Extended
 winget install Hugo.Hugo.Extended
 
-# Verifica
+# Verify
 hugo version
 ```
 
-#### Download Manuale
+#### Manual Download
 
-1. Vai a: https://github.com/gohugoio/hugo/releases/tag/v0.154.1
-2. Scarica: `hugo_extended_0.154.1_windows-amd64.zip`
-3. Estrai in `C:\Hugo\bin\`
-4. Aggiungi `C:\Hugo\bin\` al PATH
-5. Verifica: `hugo version`
+1. Go to: https://github.com/gohugoio/hugo/releases/tag/v0.154.1
+2. Download: `hugo_extended_0.154.1_windows-amd64.zip`
+3. Extract to `C:\Hugo\bin\`
+4. Add `C:\Hugo\bin\` to PATH
+5. Verify: `hugo version`
 
-### Docker (Alternativa)
+### Docker (Alternative)
 
 ```dockerfile
-# Usa immagine Hugo ufficiale
+# Use official Hugo image
 FROM klakegg/hugo:0.154.1-ext-alpine
 
 WORKDIR /src
@@ -208,100 +208,100 @@ RUN hugo --minify
 ```
 
 ```bash
-# Build con Docker
+# Build with Docker
 docker build -t dxers-site .
 ```
 
 ---
 
-## Verifica Installazione
+## Installation Verification
 
-### Test Base
+### Basic Test
 
 ```bash
-# 1. Verifica versione
+# 1. Verify version
 hugo version
 
-# Output atteso:
+# Expected output:
 # hugo v0.154.1+extended linux/amd64
 
-# 2. Verifica che sia Extended
+# 2. Verify it's Extended
 hugo version | grep extended
 
-# Deve contenere "+extended"
+# Must contain "+extended"
 ```
 
-### Test Progetto
+### Project Test
 
 ```bash
-# 1. Vai nella directory progetto
+# 1. Go to project directory
 cd /path/to/dxers-site
 
-# 2. Aggiorna submodules
+# 2. Update submodules
 git submodule update --init --recursive
 
-# 3. Installa dipendenze npm
+# 3. Install npm dependencies
 npm install
 
-# 4. Avvia server sviluppo
+# 4. Start development server
 hugo server
 
-# 5. Apri browser
+# 5. Open browser
 # http://localhost:1313
 
-# 6. Verifica che il sito carichi correttamente
+# 6. Verify site loads correctly
 ```
 
-### Test Build Produzione
+### Production Build Test
 
 ```bash
-# Build con minificazione
+# Build with minification
 hugo --minify
 
-# Verifica output
+# Verify output
 ls -lh public/
 
-# Controlla errori
-# Non devono esserci errori nel log
+# Check errors
+# There should be no errors in the log
 ```
 
 ---
 
-## Post-Installazione
+## Post-Installation
 
-### 1. Test Completo
+### 1. Complete Testing
 
-#### Checklist Test
-- [ ] Homepage carica correttamente
-- [ ] Menu navigazione funziona
-- [ ] Tutte le pagine docs accessibili
-- [ ] Pagine community accessibili
-- [ ] Link Discord funziona
-- [ ] Ricerca funziona (se abilitata)
-- [ ] Stili CSS caricano correttamente
+#### Test Checklist
+- [ ] Homepage loads correctly
+- [ ] Navigation menu works
+- [ ] All docs pages accessible
+- [ ] Community pages accessible
+- [ ] Discord link works
+- [ ] Search works (if enabled)
+- [ ] CSS styles load correctly
 - [ ] Responsive design OK (mobile/tablet/desktop)
-- [ ] Performance accettabili
+- [ ] Acceptable performance
 
-#### Comandi Test
+#### Test Commands
 
 ```bash
-# Server sviluppo
+# Development server
 hugo server -D
 
-# Test su network locale
+# Test on local network
 hugo server --bind 0.0.0.0
 
-# Build produzione
+# Production build
 hugo --minify
 
-# Metriche performance
+# Performance metrics
 hugo --templateMetrics
 ```
 
-### 2. Aggiorna Documentazione
+### 2. Update Documentation
 
 ```bash
-# Crea file .hugo-version per CI/CD
+# Create .hugo-version file for CI/CD
 echo "0.154.1" > .hugo-version
 
 # Commit
@@ -309,9 +309,9 @@ git add .hugo-version
 git commit -m "chore: specify Hugo version 0.154.1"
 ```
 
-### 3. Aggiorna CI/CD
+### 3. Update CI/CD
 
-Se usi CloudFlare Pages, GitHub Actions, o altro CI/CD:
+If using CloudFlare Pages, GitHub Actions, or other CI/CD:
 
 #### CloudFlare Pages
 
@@ -348,21 +348,21 @@ HUGO_VERSION = "0.154.1"
   HUGO_VERSION = "0.154.1"
 ```
 
-### 4. Considera Aggiornamento Docsy
+### 4. Consider Updating Docsy
 
 ```bash
-# Verifica versione Docsy corrente
+# Check current Docsy version
 cd themes/docsy
 git describe --tags
 
-# Aggiorna a ultima versione
+# Update to latest version
 cd ../..
 git submodule update --remote themes/docsy
 
 # Test
 hugo server
 
-# Se OK, commit
+# If OK, commit
 git add themes/docsy
 git commit -m "chore: update Docsy theme to latest"
 ```
@@ -371,166 +371,166 @@ git commit -m "chore: update Docsy theme to latest"
 
 ## Troubleshooting
 
-### Problema: "hugo: command not found"
+### Problem: "hugo: command not found"
 
-**Causa**: Hugo non è nel PATH
+**Cause**: Hugo is not in PATH
 
-**Soluzione**:
+**Solution**:
 ```bash
-# Linux/macOS: Aggiungi a ~/.bashrc o ~/.zshrc
+# Linux/macOS: Add to ~/.bashrc or ~/.zshrc
 export PATH=$PATH:/usr/local/bin
 
-# Ricarica
+# Reload
 source ~/.bashrc
 
-# Windows: Aggiungi a PATH sistema
-# Pannello di controllo > Sistema > Variabili ambiente
+# Windows: Add to system PATH
+# Control Panel > System > Environment Variables
 ```
 
-### Problema: "Error: failed to extract shortcode"
+### Problem: "Error: failed to extract shortcode"
 
-**Causa**: Versione Hugo standard invece di Extended
+**Cause**: Standard Hugo version instead of Extended
 
-**Soluzione**:
+**Solution**:
 ```bash
-# Verifica
+# Verify
 hugo version | grep extended
 
-# Se non vedi "+extended", reinstalla Hugo Extended
+# If you don't see "+extended", reinstall Hugo Extended
 ```
 
-### Problema: "POSTCSS: failed to transform"
+### Problem: "POSTCSS: failed to transform"
 
-**Causa**: PostCSS non configurato correttamente
+**Cause**: PostCSS not configured correctly
 
-**Soluzione**:
+**Solution**:
 ```bash
-# Reinstalla dipendenze
+# Reinstall dependencies
 rm -rf node_modules package-lock.json
 npm install
 
-# Verifica Node.js version
-node --version  # Deve essere LTS (v18+)
+# Verify Node.js version
+node --version  # Should be LTS (v18+)
 ```
 
-### Problema: "TOCSS: failed to transform"
+### Problem: "TOCSS: failed to transform"
 
-**Causa**: Problemi SCSS/SASS
+**Cause**: SCSS/SASS issues
 
-**Soluzione**:
+**Solution**:
 ```bash
-# Verifica Hugo Extended
+# Verify Hugo Extended
 hugo version | grep extended
 
-# Pulisci cache Hugo
+# Clean Hugo cache
 hugo --cleanDestinationDir
 rm -rf resources/
 ```
 
-### Problema: Build molto lento
+### Problem: Very slow build
 
-**Causa**: Cache o configurazione non ottimale
+**Cause**: Cache or non-optimal configuration
 
-**Soluzione**:
+**Solution**:
 ```bash
-# Pulisci tutto
+# Clean everything
 hugo --cleanDestinationDir
 rm -rf resources/ public/
 
 # Rebuild
 hugo --minify
 
-# Se ancora lento, disabilita temporaneamente GitInfo
+# If still slow, temporarily disable GitInfo
 hugo --ignoreCache
 ```
 
 ---
 
-## Breaking Changes e Migrazioni
+## Breaking Changes and Migrations
 
-### Da versioni < 0.146.0
+### From versions < 0.146.0
 
-#### 1. Goldmark è ora il parser Markdown predefinito
+#### 1. Goldmark is now the default Markdown parser
 
-**Prima** (Blackfriday):
+**Before** (Blackfriday):
 ```toml
 [blackfriday]
   plainIDAnchors = true
 ```
 
-**Dopo** (Goldmark):
+**After** (Goldmark):
 ```toml
 [markup.goldmark.renderer]
   unsafe = true
 ```
 
-✅ **Status**: Già configurato in `config.toml`
+✅ **Status**: Already configured in `config.toml`
 
 #### 2. Syntax Highlighting
 
-**Prima**:
+**Before**:
 ```toml
 pygmentsUseClasses = false
 ```
 
-**Dopo**:
+**After**:
 ```toml
 [markup.highlight]
   style = "tango"
 ```
 
-✅ **Status**: Già configurato in `config.toml`
+✅ **Status**: Already configured in `config.toml`
 
 #### 3. .Page.RSSLink → .OutputFormats
 
-Se usi RSS customizzato, aggiorna codice.
+If using custom RSS, update code.
 
-### Nessuna Azione Richiesta
+### No Action Required
 
-Il progetto DXers è già configurato per Hugo moderno! ✅
+The DXers project is already configured for modern Hugo! ✅
 
 ---
 
-## Monitoring Post-Aggiornamento
+## Post-Update Monitoring
 
-### Metriche da Monitorare
+### Metrics to Monitor
 
-#### 1. Tempo di Build
+#### 1. Build Time
 
 ```bash
 # Before
 time hugo --minify
 
-# Dopo aggiornamento
+# After update
 time hugo --minify
 
-# Miglioramento atteso: 10-30% più veloce
+# Expected improvement: 10-30% faster
 ```
 
-#### 2. Dimensione Output
+#### 2. Output Size
 
 ```bash
-# Controlla dimensioni
+# Check sizes
 du -sh public/
 
-# Controlla file generati
+# Check generated files
 find public/ -type f | wc -l
 ```
 
-#### 3. Performance Template
+#### 3. Template Performance
 
 ```bash
-# Identifica template lenti
+# Identify slow templates
 hugo --templateMetrics --templateMetricsHints
 ```
 
 ### Log Monitoring
 
 ```bash
-# Build con verbose logging
+# Build with verbose logging
 hugo --verbose --debug
 
-# Salva log
+# Save log
 hugo --minify --verbose > build.log 2>&1
 ```
 
@@ -538,12 +538,12 @@ hugo --minify --verbose > build.log 2>&1
 
 ## Rollback Plan
 
-Se l'aggiornamento causa problemi:
+If the update causes problems:
 
-### 1. Versione Precedente
+### 1. Previous Version
 
 ```bash
-# Linux: Installa versione specifica
+# Linux: Install specific version
 VERSION=0.146.0
 wget https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_extended_${VERSION}_linux-amd64.tar.gz
 tar -xzf hugo_extended_${VERSION}_linux-amd64.tar.gz
@@ -558,97 +558,97 @@ FROM klakegg/hugo:0.146.0-ext-alpine
 
 ### 3. CI/CD Rollback
 
-Modifica versione Hugo in configurazione CI/CD.
+Modify Hugo version in CI/CD configuration.
 
 ---
 
-## Raccomandazioni Finali
+## Final Recommendations
 
-### ✅ DA FARE
+### ✅ TO DO
 
-1. **Installa Hugo Extended 0.154.1**
-   - Versione stabile e testata
-   - Tutte le funzionalità moderne
-   - Miglior supporto Docsy
+1. **Install Hugo Extended 0.154.1**
+   - Stable and tested version
+   - All modern features
+   - Best Docsy support
 
-2. **Testa localmente**
-   - Verifica tutte le pagine
-   - Controlla build produzione
-   - Valida HTML/CSS
+2. **Test locally**
+   - Verify all pages
+   - Check production build
+   - Validate HTML/CSS
 
-3. **Aggiorna CI/CD**
-   - Specifica versione Hugo
+3. **Update CI/CD**
+   - Specify Hugo version
    - Test deployment
 
-4. **Documenta versione**
-   - Crea `.hugo-version`
-   - Aggiorna README.md
+4. **Document version**
+   - Create `.hugo-version`
+   - Update README.md
    - Commit changes
 
-5. **Monitora**
-   - Prima settimana: controlli giornalieri
-   - Verifica metriche performance
-   - Raccogli feedback team
+5. **Monitor**
+   - First week: daily checks
+   - Verify performance metrics
+   - Collect team feedback
 
-### ⚠️ DA EVITARE
+### ⚠️ TO AVOID
 
-1. ❌ **NON installare versione standard** (solo Extended)
-2. ❌ **NON saltare test locali** prima di deploy
-3. ❌ **NON aggiornare** senza backup
-4. ❌ **NON ignorare errori** di build
-5. ❌ **NON deployare** senza test completo
+1. ❌ **DO NOT install standard version** (only Extended)
+2. ❌ **DO NOT skip local testing** before deploy
+3. ❌ **DO NOT update** without backup
+4. ❌ **DO NOT ignore build errors**
+5. ❌ **DO NOT deploy** without complete testing
 
 ---
 
-## Timeline Consigliata
+## Recommended Timeline
 
-### Fase 1: Preparazione (Giorno 1)
-- [ ] Backup progetto
-- [ ] Review documentazione
-- [ ] Preparazione ambiente
+### Phase 1: Preparation (Day 1)
+- [ ] Project backup
+- [ ] Documentation review
+- [ ] Environment preparation
 
-### Fase 2: Installazione (Giorno 1-2)
-- [ ] Installa Hugo 0.154.1 Extended
-- [ ] Verifica installazione
-- [ ] Test build locale
+### Phase 2: Installation (Day 1-2)
+- [ ] Install Hugo 0.154.1 Extended
+- [ ] Verify installation
+- [ ] Test local build
 
-### Fase 3: Testing (Giorno 2-3)
-- [ ] Test completo sito
-- [ ] Verifica tutte le pagine
+### Phase 3: Testing (Day 2-3)
+- [ ] Complete site testing
+- [ ] Verify all pages
 - [ ] Performance testing
 
-### Fase 4: Deployment (Giorno 3-4)
-- [ ] Aggiorna CI/CD
+### Phase 4: Deployment (Day 3-4)
+- [ ] Update CI/CD
 - [ ] Deploy staging
 - [ ] Test staging
-- [ ] Deploy produzione
+- [ ] Deploy production
 
-### Fase 5: Monitoring (Settimana 1)
-- [ ] Monitor metriche
-- [ ] Raccogli feedback
-- [ ] Fix eventuali issues
+### Phase 5: Monitoring (Week 1)
+- [ ] Monitor metrics
+- [ ] Collect feedback
+- [ ] Fix any issues
 
 ---
 
-## Risorse
+## Resources
 
-### Documentazione Hugo
+### Hugo Documentation
 - [Hugo Releases](https://github.com/gohugoio/hugo/releases)
 - [Hugo Installation](https://gohugo.io/installation/)
 - [Hugo Documentation](https://gohugo.io/documentation/)
 
-### Documentazione Docsy
+### Docsy Documentation
 - [Docsy Prerequisites](https://www.docsy.dev/docs/get-started/docsy-as-module/installation-prerequisites/)
 - [Docsy GitHub](https://github.com/google/docsy)
 
-### Supporto
+### Support
 - [Hugo Forum](https://discourse.gohugo.io/)
 - [Hugo GitHub Issues](https://github.com/gohugoio/hugo/issues)
 - [DXers Community Discord](https://discord.gg/RtG4nyCEDX)
 
 ---
 
-**Documento creato**: 2026-01-08
-**Ultima revisione**: 2026-01-08
-**Versione Hugo target**: 0.154.1 Extended
-**Status**: ✅ RACCOMANDATO PER INSTALLAZIONE
+**Document created**: 2026-01-08
+**Last revision**: 2026-01-08
+**Target Hugo version**: 0.154.1 Extended
+**Status**: ✅ RECOMMENDED FOR INSTALLATION

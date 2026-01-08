@@ -1,110 +1,110 @@
 # DXers Community Website
 
-Sito web ufficiale della **DXers Community** - Il gruppo utenti di HCL DX (Digital Experience).
+Official website of the **DXers Community** - The HCL DX (Digital Experience) users group.
 
 🌐 **Live Site**: [https://www.dxers.ug/](https://www.dxers.ug/)
 💬 **Discord**: [Join our community](https://discord.gg/RtG4nyCEDX)
 📦 **Repository**: [GitHub](https://github.com/DXersCommunity/dxers-site)
 
-Questo sito è costruito con [Hugo](https://gohugo.io/) e utilizza il tema [Docsy](https://github.com/google/docsy) di Google.
+This site is built with [Hugo](https://gohugo.io/) and uses Google's [Docsy](https://github.com/google/docsy) theme.
 
-## 📚 Documentazione
+## 📚 Documentation
 
-- **[CLAUDE.md](CLAUDE.md)** - Documentazione completa per Claude Code e sviluppatori AI
-- **[DOCS.md](DOCS.md)** - Documentazione tecnica dettagliata del progetto
-- **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)** - Guida aggiornamento Hugo alla versione 0.154.1
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Linee guida per contribuire
+- **[CLAUDE.md](CLAUDE.md)** - Complete documentation for Claude Code and AI developers
+- **[DOCS.md](DOCS.md)** - Detailed technical project documentation
+- **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)** - Hugo upgrade guide to version 0.154.1
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 
 ## 🚀 Quick Start
 
-### Prerequisiti
+### Prerequisites
 
-- **Hugo Extended** 0.154.1 o superiore ([Download](https://gohugo.io/installation/))
-- **Node.js** LTS (v18+) e npm
-- **Git** con supporto submodules
+- **Hugo Extended** 0.154.1 or higher ([Download](https://gohugo.io/installation/))
+- **Node.js** LTS (v18+) and npm
+- **Git** with submodule support
 
-⚠️ **IMPORTANTE**: Serve la versione **Extended** di Hugo, non quella standard!
+⚠️ **IMPORTANT**: You need the **Extended** version of Hugo, not the standard one!
 
-### Installazione
+### Installation
 
 ```bash
-# 1. Clone repository con submodules
+# 1. Clone repository with submodules
 git clone --recurse-submodules https://github.com/DXersCommunity/dxers-site.git
 cd dxers-site
 
-# 2. Installa dipendenze npm (per PostCSS)
+# 2. Install npm dependencies (for PostCSS)
 npm install
 
-# 3. Avvia server di sviluppo
+# 3. Start development server
 hugo server
 
-# 4. Apri browser su http://localhost:1313
+# 4. Open browser at http://localhost:1313
 ```
 
-### Verifica Hugo
+### Verify Hugo
 
 ```bash
-# Verifica che Hugo Extended sia installato
+# Verify that Hugo Extended is installed
 hugo version
 
-# Output atteso: hugo v0.154.1+extended linux/amd64
+# Expected output: hugo v0.154.1+extended linux/amd64
 ```
 
-Se Hugo non è installato o la versione è obsoleta, consulta **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)**.
+If Hugo is not installed or the version is outdated, consult **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)**.
 
-### Tema Docsy
+### Docsy Theme
 
-Il tema è incluso come Git submodule in `themes/docsy`:
+The theme is included as a Git submodule in `themes/docsy`:
 
 ```bash
-# Verifica submodule
+# Check submodule status
 git submodule status
 
-# Aggiorna submodule (se necessario)
+# Update submodule (if needed)
 git submodule update --init --recursive
 ```
 
-## 📋 Comandi Principali
+## 📋 Main Commands
 
-### Sviluppo
+### Development
 
 ```bash
-# Server di sviluppo
+# Development server
 hugo server
 
-# Server con draft e contenuti futuri
+# Server with drafts and future content
 hugo server -D -F
 
-# Server accessibile dalla rete locale
+# Server accessible from local network
 hugo server --bind 0.0.0.0
 ```
 
-### Build Produzione
+### Production Build
 
 ```bash
-# Build sito statico
+# Build static site
 hugo --minify
 
-# Output generato in: ./public/
+# Output generated in: ./public/
 ```
 
 ### Testing
 
 ```bash
-# Metriche performance
+# Performance metrics
 hugo --templateMetrics
 
-# Verifica build
+# Verify build
 hugo --minify --verbose
 ```
 
 ### Docker
 
-Puoi eseguire il sito dentro un container [Docker](https://docs.docker.com/).
-Questo approccio non richiede installazione di dipendenze oltre a Docker.
+You can run the site inside a [Docker](https://docs.docker.com/) container.
+This approach doesn't require installing any dependencies other than Docker.
 
 ```bash
-# 1. Build immagine Docker
+# 1. Build Docker image
 docker build -f dev.Dockerfile -t dxers-site-dev:latest .
 
 # 2. Run container
@@ -112,82 +112,82 @@ docker run --publish 1313:1313 --detach \
   --mount src="$(pwd)",target=/home/docsy/app,type=bind \
   dxers-site-dev:latest
 
-# 3. Apri browser su http://localhost:1313
+# 3. Open browser at http://localhost:1313
 
 # 4. Stop container
-docker container ls  # Trova CONTAINER_ID
+docker container ls  # Find CONTAINER_ID
 docker stop [CONTAINER_ID]
 
-# 5. Rimuovi container
+# 5. Remove container
 docker container rm [CONTAINER_ID]
 ```
 
-## 🛠️ Stack Tecnologico
+## 🛠️ Tech Stack
 
 - **Hugo Extended** 0.154.1+ - Static site generator
 - **Docsy Theme** - Google's documentation theme
 - **PostCSS** - CSS processing
 - **Autoprefixer** - CSS vendor prefixes
-- **CloudFlare Pages** - Hosting e deployment
+- **CloudFlare Pages** - Hosting and deployment
 
-## 📂 Struttura Progetto
+## 📂 Project Structure
 
 ```
 dxers-site/
-├── assets/scss/           # SCSS personalizzati
-├── content/en/            # Contenuti in inglese
-│   ├── community/         # Pagine community
-│   └── docs/              # Documentazione
-├── layouts/               # Layout Hugo personalizzati
-├── themes/docsy/          # Tema Docsy (submodule)
-├── config.toml            # Configurazione Hugo
-├── package.json           # Dipendenze npm
-└── deploy.sh              # Script deployment
+├── assets/scss/           # Custom SCSS
+├── content/en/            # English content
+│   ├── community/         # Community pages
+│   └── docs/              # Documentation
+├── layouts/               # Custom Hugo layouts
+├── themes/docsy/          # Docsy theme (submodule)
+├── config.toml            # Main Hugo configuration
+├── package.json           # npm dependencies
+└── deploy.sh              # Deployment script
 ```
 
-## 🔄 Aggiornamento Hugo
+## 🔄 Hugo Update
 
-**Versione corrente richiesta**: Hugo Extended **0.154.1**
+**Current required version**: Hugo Extended **0.154.1**
 
-Se stai usando una versione obsoleta o Hugo non è installato, consulta la guida completa:
+If you're using an outdated version or Hugo is not installed, consult the complete guide:
 
 📖 **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)**
 
-La guida include:
-- ✅ Istruzioni installazione per Linux/macOS/Windows
-- ✅ Checklist pre-aggiornamento
-- ✅ Testing e validazione
+The guide includes:
+- ✅ Installation instructions for Linux/macOS/Windows
+- ✅ Pre-upgrade checklist
+- ✅ Testing and validation
 - ✅ Troubleshooting
-- ✅ Configurazione CI/CD
+- ✅ CI/CD configuration
 
-## 🤝 Contribuire
+## 🤝 Contributing
 
-Benvenuti i contributi! Per favore:
+Contributions are welcome! Please:
 
-1. Leggi [CONTRIBUTING.md](CONTRIBUTING.md)
-2. Segui il [Code of Conduct](content/en/community/code_of_conduct/index.md)
-3. Fork il repository
-4. Crea una feature branch
-5. Commit le modifiche
-6. Push e crea una Pull Request
+1. Read [CONTRIBUTING.md](CONTRIBUTING.md)
+2. Follow the [Code of Conduct](content/en/community/code_of_conduct/index.md)
+3. Fork the repository
+4. Create a feature branch
+5. Commit your changes
+6. Push and create a Pull Request
 
-## 📝 Documentazione Aggiuntiva
+## 📝 Additional Documentation
 
-- **[Documentazione Hugo](https://gohugo.io/documentation/)**
-- **[Documentazione Docsy](https://www.docsy.dev/docs/)**
-- **[Guida Docsy](https://www.docsy.dev/docs/getting-started/)**
+- **[Hugo Documentation](https://gohugo.io/documentation/)**
+- **[Docsy Documentation](https://www.docsy.dev/docs/)**
+- **[Docsy Guide](https://www.docsy.dev/docs/getting-started/)**
 
-## 🐛 Supporto
+## 🐛 Support
 
 - **Issues**: [GitHub Issues](https://github.com/DXersCommunity/dxers-site/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/DXersCommunity/dxers-site/discussions)
 - **Discord**: [DXers Community](https://discord.gg/RtG4nyCEDX)
 
-## 📜 Licenza
+## 📜 License
 
-Vedi [LICENSE](LICENSE) per i dettagli.
+See [LICENSE](LICENSE) for details.
 
 ---
 
 **DXers Community** - The HCL DX Users Group
-Made with ❤️ by the DXers Community 
+Made with ❤️ by the DXers Community
