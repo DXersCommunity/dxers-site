@@ -16,7 +16,8 @@ defaultContentLanguageInSubdir = false
 # Useful when translating.
 enableMissingTranslationPlaceholders = true
 
-disableKinds = ["taxonomy", "taxonomyTerm"]
+# Note: "taxonomyTerm" was deprecated in Hugo 0.73.0, use "term" instead
+disableKinds = ["taxonomy", "term"]
 
 # Highlighting config
 pygmentsCodeFences = true
@@ -31,12 +32,9 @@ pygmentsStyle = "tango"
 [permalinks]
 blog = "/:section/:year/:month/:day/:slug/"
 
-## Configuration for BlackFriday markdown parser: https://github.com/russross/blackfriday
-[blackfriday]
-plainIDAnchors = true
-hrefTargetBlank = true
-angledQuotes = false
-latexDashes = true
+# Note: BlackFriday markdown parser is deprecated. Hugo now uses Goldmark by default.
+# The [markup.goldmark] section below configures the modern parser.
+# [blackfriday]  # Removed - deprecated since Hugo 0.60
 
 # Image processing configuration.
 [imaging]
