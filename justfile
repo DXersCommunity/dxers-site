@@ -146,6 +146,40 @@ new-page path:
 new-post title:
     hugo new content/en/blog/{{title}}.md
 
+# === CloudFlare Pages / Wrangler Commands ===
+
+# Deploy to CloudFlare Pages (production)
+cf-deploy: build
+    @echo "Deploying to CloudFlare Pages (production)..."
+    wrangler pages deploy public --project-name=dxers-site --branch=dxers-site
+
+# Deploy preview to CloudFlare Pages
+cf-deploy-preview: build
+    @echo "Deploying preview to CloudFlare Pages..."
+    wrangler pages deploy public --project-name=dxers-site --branch=preview
+
+# Check CloudFlare Pages deployment status
+cf-status:
+    wrangler pages deployment list --project-name=dxers-site
+
+# View CloudFlare Pages project info
+cf-info:
+    wrangler pages project list
+
+# Tail CloudFlare Pages logs
+cf-logs:
+    wrangler pages deployment tail --project-name=dxers-site
+
+# Open CloudFlare Pages dashboard
+cf-dashboard:
+    @echo "Opening CloudFlare Pages dashboard..."
+    @echo "https://dash.cloudflare.com/pages"
+
+# Validate wrangler.toml configuration
+cf-validate:
+    @echo "Validating wrangler.toml..."
+    wrangler pages project list > /dev/null && echo "✅ Wrangler configuration valid" || echo "❌ Wrangler configuration invalid"
+
 # === Deployment Commands ===
 
 # Deploy site (requires configuration)

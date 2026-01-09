@@ -13,6 +13,7 @@ This site is built with [Hugo](https://gohugo.io/) and uses Google's [Docsy](htt
 - **[CLAUDE.md](CLAUDE.md)** - Complete documentation for Claude Code and AI developers
 - **[DOCS.md](DOCS.md)** - Detailed technical project documentation
 - **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)** - Hugo upgrade guide to version 0.154.1
+- **[CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md)** - CloudFlare Pages deployment guide
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 
 ## 🚀 Quick Start
@@ -129,6 +130,8 @@ docker container rm [CONTAINER_ID]
 - **PostCSS** - CSS processing
 - **Autoprefixer** - CSS vendor prefixes
 - **CloudFlare Pages** - Hosting and deployment
+- **Wrangler** - CloudFlare CLI for deployments
+- **Just** - Command runner for development tasks
 
 ## 📂 Project Structure
 
@@ -141,7 +144,10 @@ dxers-site/
 ├── layouts/               # Custom Hugo layouts
 ├── themes/docsy/          # Docsy theme (submodule)
 ├── config.toml            # Main Hugo configuration
+├── wrangler.toml          # CloudFlare Pages configuration
+├── justfile               # Just command runner recipes
 ├── package.json           # npm dependencies
+├── .env.example           # Environment variables template
 └── deploy.sh              # Deployment script
 ```
 
