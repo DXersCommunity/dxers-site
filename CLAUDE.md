@@ -12,16 +12,48 @@
 ## Technology Stack
 
 ### Hugo Static Site Generator
-- **Recommended version**: Hugo Extended **0.154.1** (latest version - January 2026)
-- **Minimum required version**: Hugo Extended **0.146.0+**
+- **Verified working version**: Hugo Extended **0.154.3** (latest GitHub release as of this writing)
 - **IMPORTANT**: The **Extended** version of Hugo is required for SCSS support
 - **Download**: https://gohugo.io/installation/
 
 ### Docsy Theme
 - **Theme**: [Docsy](https://github.com/google/docsy) by Google
-- **Installation**: Git submodule in `themes/docsy`
+- **Pinned version**: **v0.15.0** (git tag) — checked out in the `themes/docsy` submodule
+- **Loaded via**: Hugo Modules (see "Module Architecture" below), NOT the legacy `theme = [...]` array
 - **Documentation**: https://www.docsy.dev/docs/
-- **Docsy version**: v0.12.0+ (requires Hugo 0.146.0+)
+
+⚠️ **Do not upgrade Docsy past v0.15.0 without also upgrading Hugo.** Docsy v0.16.0 and v0.17.0 bumped `theme.toml`'s `min_version` to **0.160.1**, which does not exist yet on Hugo's GitHub releases (latest is 0.154.3 at time of writing). Jumping to v0.16.0/v0.17.0 with Hugo 0.154.3 will break the build. Re-verify `min_version` in `themes/docsy/theme.toml` (or `theme/theme.toml` for v0.16.0+, which also relocates the theme into a `theme/` subfolder with module path `github.com/google/docsy/theme`) before ever bumping the submodule tag.
+
+### Module Architecture (Hybrid: submodule + Hugo Modules)
+
+Docsy's own indirect dependencies (Bootstrap, Font Awesome) are distributed via **Hugo Modules**, not vendored files in the theme repo. This project uses a **hybrid setup**:
+
+1. `themes/docsy` is still a plain Git submodule (physical checkout, no network needed to fetch the theme itself).
+2. `go.mod` at the project root declares the project as a Hugo Module and adds a `replace` directive pointing `github.com/google/docsy` at the local `./themes/docsy` checkout — so Hugo never tries to download Docsy itself over the network.
+3. `config.toml` imports Docsy via `[module.imports]` (not the old `theme = ["docsy"]` array).
+4. Hugo then resolves Docsy's *indirect* dependencies (Bootstrap, Font Awesome) as normal Hugo Modules, which **does** require network access and downloads them into the Go module cache (`$(go env GOMODCACHE)`, no vendoring committed to the repo).
+
+**Requires Go installed** (verified with Go 1.24.7) purely so `hugo mod tidy` / the Hugo Modules resolver can run — no Go code is written for this project.
+
+```toml
+# go.mod
+module github.com/DXersCommunity/dxers-site
+go 1.24.7
+replace github.com/google/docsy => ./themes/docsy
+require github.com/google/docsy v0.15.0 // indirect
+```
+
+```toml
+# config.toml
+[module]
+  [[module.imports]]
+    path = "github.com/google/docsy"
+```
+
+If `go.sum` is ever deleted or dependencies change, regenerate with:
+```bash
+hugo mod tidy
+```
 
 ### Node.js Dependencies
 ```json
@@ -51,14 +83,20 @@ dxers-site/
 │           │   ├── community_resources/
 │           │   └── hcl_resources/
 │           └── Contribution guidelines/
-├── layouts/                     # Custom Hugo layouts
-│   └── 404.html
+├── layouts/                      # Custom Hugo layout overrides
+│   └── 404.html                  # Only remaining override — Docsy v0.15.0
+│                                  # covers everything else natively now
 ├── themes/
-│   └── docsy/                   # Docsy theme (submodule)
+│   └── docsy/                   # Docsy theme (submodule, pinned to v0.15.0)
 ├── config.toml                  # Main Hugo configuration
+├── go.mod / go.sum               # Hugo Modules manifest (see above)
 ├── package.json                 # Node.js dependencies
+├── wrangler.toml                 # CloudFlare Pages configuration
+├── justfile                      # Command runner recipes
 └── deploy.sh                    # Deployment script
 ```
+
+**Note**: Two custom layout overrides (`layouts/partials/head.html` and `layouts/docs/list.html`) were removed — they were workarounds for a very old, pre-Hugo-Modules Docsy checkout (deprecated `_internal/google_analytics_async.html`, `.Site.DisqusShortname`, etc.) and are now fully superseded by Docsy v0.15.0's native templates. Do not re-add them.
 
 ## Development Prerequisites
 
@@ -69,11 +107,19 @@ dxers-site/
 # Check installed version
 hugo version
 
-# Expected output:
-# hugo v0.154.1+extended linux/amd64 ...
+# Verified working output:
+# hugo v0.154.3+extended linux/amd64 ...
 ```
 
-### 2. Node.js and npm
+### 2. Go
+Required for Hugo Modules resolution (Docsy's Bootstrap/Font Awesome dependencies).
+
+```bash
+go version
+# Verified with go1.24.7
+```
+
+### 3. Node.js and npm
 - **Required version**: Node.js LTS (Long Term Support)
 - **Usage**: For PostCSS and Autoprefixer
 
@@ -82,7 +128,7 @@ hugo version
 npm install
 ```
 
-### 3. Git Submodules
+### 4. Git Submodules
 The Docsy theme is installed as a Git submodule:
 
 ```bash
@@ -93,8 +139,14 @@ git clone --recurse-submodules https://github.com/DXersCommunity/dxers-site.git
 git submodule update --init --recursive
 ```
 
-### 4. Go (Optional)
-If you want to use Docsy as a Hugo Module instead of a submodule.
+### Full Setup Sequence (Verified Working)
+
+```bash
+git submodule update --init --recursive
+npm install
+hugo mod tidy      # resolves Bootstrap/Font Awesome via Hugo Modules (needs network)
+hugo --minify      # build ✅ 29 pages, 0 errors, 0 warnings
+```
 
 ## Main Commands
 
@@ -113,20 +165,10 @@ hugo server -D -F
 ### Production Build
 
 ```bash
-# Build static site
-hugo
+# Build static site (verified: 29 pages, ~1.7s, zero warnings)
+hugo --minify
 
 # Output in: ./public/
-```
-
-### Build with PostCSS (for deployment)
-
-```bash
-# First install dependencies
-npm install
-
-# Then build
-hugo --minify
 ```
 
 ### Docker
@@ -147,93 +189,23 @@ docker run --publish 1313:1313 --detach \
 
 - **baseURL**: `https://www.dxers.ug/`
 - **title**: `DXers Community Website`
-- **theme**: `docsy`
+- **theme**: loaded via `[module.imports]` (Docsy), not the legacy `theme` array
 - **contentDir**: `content/en`
 - **defaultContentLanguage**: `en`
+
+### Deprecated settings fixed (verified via clean build with zero warnings)
+
+| Old (deprecated) | New | Notes |
+|---|---|---|
+| `disableKinds = ["taxonomy", "taxonomyTerm"]` | `disableKinds = ["taxonomy", "term"]` | `taxonomyTerm` deprecated since Hugo 0.73.0 |
+| `[blackfriday]` section | *(removed)* | Blackfriday parser deprecated; Hugo uses Goldmark (`[markup.goldmark]`) by default |
+| `algolia_docsearch = false` | *(removed, use `[params.search.algolia]` if ever enabled)* | Top-level key deprecated |
+| `footer_about_disable = false` | `footer_about_enable = true` | Renamed **and inverted** — do not just rename, flip the boolean |
 
 ### Social Links
 
 - **Discord**: https://discord.gg/RtG4nyCEDX
 - **GitHub**: https://github.com/DXersCommunity/dxers-site
-
-## Hugo Update
-
-### Current Version
-**Hugo is not currently installed** in the development system.
-
-### Available Versions (January 2026)
-- **Latest version**: Hugo Extended **0.154.1**
-- **Recommended stable version**: Hugo Extended **0.146.0+**
-
-### Why Update?
-
-**New Hugo features 2024-2025:**
-- LaTeX and TeX typesetting
-- Server-side math rendering with KaTeX
-- Streaming builds for millions of pages
-- Content adapters for remote data
-- Improved Tailwind CSS support
-- Obsidian-style callouts
-
-### How to Update
-
-#### Linux
-```bash
-# Download Extended version
-wget https://github.com/gohugoio/hugo/releases/download/v0.154.1/hugo_extended_0.154.1_linux-amd64.tar.gz
-
-# Extract
-tar -xzf hugo_extended_0.154.1_linux-amd64.tar.gz
-
-# Move to PATH
-sudo mv hugo /usr/local/bin/
-
-# Verify
-hugo version
-```
-
-#### macOS
-```bash
-# With Homebrew
-brew install hugo
-```
-
-#### Windows
-```powershell
-# With Chocolatey
-choco install hugo-extended
-
-# Or with Scoop
-scoop install hugo-extended
-```
-
-### Recommendations
-
-1. ✅ **UPDATE to Hugo Extended 0.154.1**
-   - Compatible with Docsy v0.12.0+
-   - Includes all latest features
-   - Better performance
-   - Bug fixes
-
-2. ✅ **Test after update**
-   ```bash
-   # Local test
-   hugo server
-
-   # Build test
-   hugo --minify
-   ```
-
-3. ✅ **Verify Docsy theme compatibility**
-   ```bash
-   # Update Docsy submodule
-   git submodule update --remote themes/docsy
-   ```
-
-4. ⚠️ **Beware of Breaking Changes**
-   - Hugo 0.146.0+ changed some APIs
-   - Test all pages before deployment
-   - Verify PostCSS works correctly
 
 ## Development Workflow
 
@@ -252,6 +224,7 @@ hugo server -D
 - Test responsive design
 - Validate HTML/CSS
 - Check accessibility
+- Run `hugo --minify` and confirm **zero** `WARN`/`ERROR` lines in the output
 
 ### 4. Production Build
 ```bash
@@ -274,7 +247,7 @@ Create PR to `dxers-site` branch
 ### Production Environment
 - **Platform**: CloudFlare Pages
 - **Deploy branch**: `dxers-site`
-- **Build command**: `hugo --minify`
+- **Build command**: `hugo --minify` (CloudFlare Pages needs Go available in the build image to resolve Hugo Modules — see `wrangler.toml` / `CLOUDFLARE_DEPLOYMENT.md`)
 - **Output directory**: `public/`
 
 ### Deployment Script
@@ -287,8 +260,11 @@ Create PR to `dxers-site` branch
 
 ### Hugo not found
 ```bash
-# Install Hugo Extended
-# See "How to Update" section
+# Install Hugo Extended 0.154.3 (or whatever is the current latest release
+# that still satisfies themes/docsy/theme.toml's min_version)
+wget https://github.com/gohugoio/hugo/releases/download/v0.154.3/hugo_extended_0.154.3_linux-amd64.tar.gz
+tar -xzf hugo_extended_0.154.3_linux-amd64.tar.gz
+sudo mv hugo /usr/local/bin/ && sudo chmod +x /usr/local/bin/hugo
 ```
 
 ### Missing Docsy theme
@@ -296,6 +272,20 @@ Create PR to `dxers-site` branch
 # Initialize submodules
 git submodule update --init --recursive
 ```
+
+### `ERROR ... File to import not found ... vendor/bootstrap/scss/bootstrap`
+**Cause**: Hugo Modules not resolved (missing/stale `go.mod`, `go.sum`, or no network access to the Go module proxy).
+
+```bash
+hugo mod tidy
+hugo --minify
+```
+
+### `ERROR ... File is nil; wrap it in if or with` (in `section-index.html`)
+**Cause**: Using a Docsy version older than the fix for [google/docsy#1874](https://github.com/google/docsy/issues/1874) (fixed by PRs #1890/#1947). Ensure `themes/docsy` submodule is checked out at **v0.15.0 or later** (but see the min_version warning above before going past v0.15.0).
+
+### `ERROR ... unknown output format "print" for kind "section"` or template errors referencing `layouts/partials/head.html` / `layouts/docs/list.html`
+**Cause**: Stale custom layout overrides from a pre-Hugo-Modules Docsy checkout. These were removed — if they reappear, delete them; Docsy v0.15.0 handles Google Analytics, Disqus, dark mode, and feedback natively.
 
 ### PostCSS errors
 ```bash
@@ -318,11 +308,13 @@ hugo version | grep extended
 - [Hugo Documentation](https://gohugo.io/documentation/)
 - [Hugo Quick Start](https://gohugo.io/getting-started/quick-start/)
 - [Hugo Forum](https://discourse.gohugo.io/)
+- [Hugo Modules](https://gohugo.io/hugo-modules/)
 
 ### Docsy
 - [Docsy Documentation](https://www.docsy.dev/docs/)
 - [Docsy GitHub](https://github.com/google/docsy)
 - [Docsy Example](https://github.com/google/docsy-example)
+- [Docsy issue #1874 (section-index NPE)](https://github.com/google/docsy/issues/1874)
 
 ### DXers Community
 - [Discord](https://discord.gg/RtG4nyCEDX)
@@ -342,6 +334,6 @@ See [LICENSE](LICENSE) for details.
 
 ---
 
-**Last updated**: 2026-01-08
-**Recommended Hugo version**: 0.154.1 Extended
-**Minimum Hugo version**: 0.146.0 Extended
+**Last updated**: 2026-09-01 (verified end-to-end with a real Hugo install and build)
+**Verified working Hugo version**: 0.154.3 Extended
+**Pinned Docsy version**: v0.15.0

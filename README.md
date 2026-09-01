@@ -12,7 +12,7 @@ This site is built with [Hugo](https://gohugo.io/) and uses Google's [Docsy](htt
 
 - **[CLAUDE.md](CLAUDE.md)** - Complete documentation for Claude Code and AI developers
 - **[DOCS.md](DOCS.md)** - Detailed technical project documentation
-- **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)** - Hugo upgrade guide to version 0.154.1
+- **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)** - Hugo upgrade guide (verified working with Hugo 0.154.3)
 - **[CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md)** - CloudFlare Pages deployment guide
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 
@@ -20,7 +20,8 @@ This site is built with [Hugo](https://gohugo.io/) and uses Google's [Docsy](htt
 
 ### Prerequisites
 
-- **Hugo Extended** 0.154.1 or higher ([Download](https://gohugo.io/installation/))
+- **Hugo Extended** 0.154.3 or higher ([Download](https://gohugo.io/installation/)) — always check the [latest release](https://github.com/gohugoio/hugo/releases/latest), don't assume a specific patch version stays current
+- **Go** 1.21+ (needed to resolve Docsy's Hugo Modules dependencies — see below)
 - **Node.js** LTS (v18+) and npm
 - **Git** with submodule support
 
@@ -36,11 +37,16 @@ cd dxers-site
 # 2. Install npm dependencies (for PostCSS)
 npm install
 
-# 3. Start development server
+# 3. Resolve Docsy's Hugo Module dependencies (Bootstrap, Font Awesome)
+hugo mod tidy
+
+# 4. Start development server
 hugo server
 
-# 4. Open browser at http://localhost:1313
+# 5. Open browser at http://localhost:1313
 ```
+
+> **Why `hugo mod tidy`?** Docsy is loaded as a Hugo Module (not a plain theme). The theme's own layout files come from the `themes/docsy` git submodule, but Docsy's *dependencies* (Bootstrap, Font Awesome) are resolved via Hugo Modules and require Go + network access the first time. See [CLAUDE.md](CLAUDE.md#module-architecture-hybrid-submodule--hugo-modules) for the full explanation.
 
 ### Verify Hugo
 
@@ -48,14 +54,14 @@ hugo server
 # Verify that Hugo Extended is installed
 hugo version
 
-# Expected output: hugo v0.154.1+extended linux/amd64
+# Verified working output: hugo v0.154.3+extended linux/amd64
 ```
 
 If Hugo is not installed or the version is outdated, consult **[HUGO_UPDATE_2026.md](HUGO_UPDATE_2026.md)**.
 
 ### Docsy Theme
 
-The theme is included as a Git submodule in `themes/docsy`:
+The theme is included as a Git submodule in `themes/docsy`, pinned to **v0.15.0** (do not bump without reading the note in [CLAUDE.md](CLAUDE.md) about Docsy's `min_version` requirement):
 
 ```bash
 # Check submodule status
@@ -83,7 +89,7 @@ hugo server --bind 0.0.0.0
 ### Production Build
 
 ```bash
-# Build static site
+# Build static site (verified: 29 pages, ~1.7s, zero warnings)
 hugo --minify
 
 # Output generated in: ./public/
@@ -125,8 +131,9 @@ docker container rm [CONTAINER_ID]
 
 ## 🛠️ Tech Stack
 
-- **Hugo Extended** 0.154.1+ - Static site generator
-- **Docsy Theme** - Google's documentation theme
+- **Hugo Extended** 0.154.3+ - Static site generator
+- **Docsy Theme** (v0.15.0, pinned) - Google's documentation theme, loaded as a Hugo Module
+- **Go** 1.21+ - Required to resolve Docsy's Hugo Module dependencies (Bootstrap, Font Awesome)
 - **PostCSS** - CSS processing
 - **Autoprefixer** - CSS vendor prefixes
 - **CloudFlare Pages** - Hosting and deployment
@@ -141,9 +148,10 @@ dxers-site/
 ├── content/en/            # English content
 │   ├── community/         # Community pages
 │   └── docs/              # Documentation
-├── layouts/               # Custom Hugo layouts
-├── themes/docsy/          # Docsy theme (submodule)
+├── layouts/               # Custom Hugo layouts (only 404.html now)
+├── themes/docsy/          # Docsy theme (submodule, pinned to v0.15.0)
 ├── config.toml            # Main Hugo configuration
+├── go.mod / go.sum        # Hugo Modules manifest (Docsy dependency resolution)
 ├── wrangler.toml          # CloudFlare Pages configuration
 ├── justfile               # Just command runner recipes
 ├── package.json           # npm dependencies
@@ -153,7 +161,7 @@ dxers-site/
 
 ## 🔄 Hugo Update
 
-**Current required version**: Hugo Extended **0.154.1**
+**Verified working version**: Hugo Extended **0.154.3**
 
 If you're using an outdated version or Hugo is not installed, consult the complete guide:
 

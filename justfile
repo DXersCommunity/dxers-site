@@ -68,12 +68,19 @@ test-all: build validate-html check-links
 
 # === Setup Commands ===
 
-# Initialize project (install dependencies and submodules)
+# Initialize project (install dependencies, submodules, and Hugo Modules)
 setup:
     @echo "Initializing DXers site..."
     git submodule update --init --recursive
     npm install
+    hugo mod tidy
     @echo "✅ Setup complete!"
+
+# Resolve Docsy's Hugo Module dependencies (Bootstrap, Font Awesome)
+# Requires Go installed and network access. Run after cloning or if the
+# build fails with "File to import not found ... vendor/bootstrap".
+mod-tidy:
+    hugo mod tidy
 
 # Install npm dependencies
 npm-install:
@@ -91,10 +98,17 @@ npm-fresh:
 # === Git Submodule Commands ===
 
 # Update Docsy theme submodule
+# WARNING: Do NOT blindly update to the latest tag. Docsy v0.16.0+ requires
+# Hugo 0.160.1+ (not released yet as of the last verified build with Hugo
+# 0.154.3) and restructures the repo (module moves to a "theme/" subfolder
+# with Go module path "github.com/google/docsy/theme"). Check
+# themes/docsy/theme.toml's min_version against your installed `hugo version`
+# BEFORE checking out a newer tag. See CLAUDE.md for details.
 update-theme:
     @echo "Updating Docsy theme..."
     git submodule update --remote themes/docsy
-    @echo "✅ Theme updated! Test with: just dev"
+    @echo "⚠️  Check themes/docsy/theme.toml min_version against 'hugo version' before committing!"
+    @echo "✅ Theme updated! Test with: just build"
 
 # Initialize git submodules
 init-submodules:

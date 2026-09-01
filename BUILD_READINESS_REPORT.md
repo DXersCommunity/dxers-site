@@ -1,478 +1,191 @@
 # Build Readiness Report
 **DXers Community Website**
-**Date**: 2026-01-08
-**Status**: ⚠️ READY (Hugo Installation Required)
+**Date**: 2026-01-08 (updated after real build verification)
+**Status**: ✅ BUILD VERIFIED (clean `hugo --minify`, zero errors/warnings)
 
 ---
 
 ## Executive Summary
 
-The DXers Community Website project has been analyzed and is **ready for build** with one critical requirement: **Hugo Extended 0.154.1+** must be installed.
+Hugo **is now installed** and the site **builds successfully end-to-end with zero errors and zero warnings**. This is no longer a readiness estimate — it is a completed, verified build.
 
-All other dependencies and configurations are in place and verified.
-
----
-
-## ✅ Verification Results
-
-### 1. Node.js Environment
-
-| Component | Version | Status | Required |
-|-----------|---------|--------|----------|
-| **Node.js** | v22.21.1 | ✅ PASS | v18+ LTS |
-| **npm** | 10.9.4 | ✅ PASS | 9.x+ |
-
-**Result**: Node.js environment meets all requirements.
-
-### 2. npm Dependencies
-
-```
-Installed Packages:
-├── autoprefixer@9.8.6
-└── postcss-cli@7.1.2
-
-Total packages: 117 (116 dependencies)
-Installation time: 4 seconds
-```
-
-**Status**: ✅ All npm dependencies installed successfully
-
-**Notes**:
-- 12 vulnerabilities detected (7 moderate, 5 high)
-- These are expected with legacy versions (autoprefixer ^9.8.6, postcss-cli ^7.1.2)
-- Vulnerabilities do not affect build process
-- Recommendation: Consider updating to latest versions in future
-
-**Action Items**:
-```bash
-# To fix non-breaking issues:
-npm audit fix
-
-# To see details:
-npm audit
-```
-
-### 3. Git Submodules (Docsy Theme)
-
-| Component | Status | Commit Hash |
-|-----------|--------|-------------|
-| **themes/docsy** | ✅ INITIALIZED | 2b3b9247 |
-
-**Result**: Docsy theme submodule successfully initialized and checked out.
-
-**Verification**:
-```bash
-$ git submodule status
- 2b3b9247cf70afb4e40e3fbe1fc6fc46632715c6 themes/docsy (heads/master)
-```
-
-**Theme Structure**:
-- ✅ Assets directory present
-- ✅ Layouts directory present
-- ✅ Configuration file present
-- ✅ Dependencies defined
-
-### 4. Project Configuration
-
-#### config.toml Verification
-
-```toml
-baseURL = "https://www.dxers.ug/"
-title = "DXers Community Website"
-theme = ["docsy"]
-enableGitInfo = true
-contentDir = "content/en"
-defaultContentLanguage = "en"
-```
-
-**Status**: ✅ Configuration valid and complete
-
-**Key Settings Verified**:
-- ✅ Base URL configured
-- ✅ Theme specified (docsy)
-- ✅ Content directory set
-- ✅ Language configuration correct
-- ✅ GitInfo enabled
-- ✅ Markup configuration present
-
-### 5. Content Structure
-
-```
-content/en/
-├── _index.html              # Homepage
-├── search.md                # Search page
-├── community/               # Community section (4 pages)
-└── docs/                    # Documentation (10 pages)
-```
-
-**Content Files Count**: 14 Markdown/HTML files
-
-**Content Breakdown**:
-- Community pages: 4
-- Documentation pages: 10
-- Homepage: 1
-- Search page: 1
-
-**Status**: ✅ Content structure valid
-
-### 6. Custom Assets
-
-#### SCSS Customization
-
-File: `assets/scss/_variables_project.scss`
-
-**Status**: ✅ Present (63 bytes)
-
-**Content**: Bootstrap and Docsy variable customizations
-
-### 7. Project Files
-
-| File | Status | Purpose |
-|------|--------|---------|
-| config.toml | ✅ Present | Hugo configuration |
-| package.json | ✅ Present | npm dependencies |
-| .gitmodules | ✅ Present | Git submodule config |
-| deploy.sh | ✅ Present | Deployment script |
-| dev.Dockerfile | ✅ Present | Docker development |
-| justfile | ✅ Present | Command runner |
-| .env.example | ✅ Present | Environment template |
-
-**Status**: ✅ All essential project files present
+The previous version of this report (2026-01-08, earlier session) concluded the project was "95% ready" and blocked solely on Hugo installation, which network restrictions prevented at the time. In this session, Hugo was downloaded and installed without issue, and a real (not simulated) build was run through to a clean `public/` output. Along the way, four real build failures were found and fixed — none of them was the originally-suspected "Hugo not installed" blocker; all were configuration/theme-version issues uncovered only by actually running the build. Those fixes are documented below as a troubleshooting record for future maintainers.
 
 ---
 
-## ❌ Missing Requirements
+## ✅ Verified Environment
 
-### Hugo Extended
+| Component | Version | Status |
+|-----------|---------|--------|
+| **Hugo** | v0.154.3+extended linux/amd64 | ✅ VERIFIED |
+| **Go** | go1.24.7 | ✅ VERIFIED (newly required, see below) |
+| **Node.js** | v22.22.2 | ✅ VERIFIED |
+| **npm** | 10.9.7 | ✅ VERIFIED |
+| **Git submodule (Docsy)** | v0.15.0 (pinned) | ✅ VERIFIED |
 
-**Status**: ❌ NOT INSTALLED
-
-**Required Version**: Hugo Extended 0.154.1+ (minimum 0.146.0)
-**Current Version**: Not installed
-
-**Critical**: Hugo Extended is required to build the site due to:
-- SCSS/SASS processing requirements (Docsy theme)
-- Modern Hugo features used in configuration
-- PostCSS integration
-
-#### Installation Attempts
-
-**Attempt 1**: GitHub direct download
-- **Result**: ❌ Failed (network restrictions)
-- **Error**: `CONNECT tunnel failed, response 403`
-
-**Attempt 2**: APT package manager
-- **Available version**: Hugo 0.123.7 (standard)
-- **Result**: ❌ Failed (network restrictions)
-- **Issue**: Version too old (< 0.146.0 required minimum)
-- **Error**: `Temporary failure resolving repositories`
-
-#### Recommended Installation
-
-Once network access is available:
-
-##### Linux
+Hugo was installed with:
 ```bash
-VERSION=0.154.3  # Latest available
-wget https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_extended_${VERSION}_linux-amd64.tar.gz
-tar -xzf hugo_extended_${VERSION}_linux-amd64.tar.gz
+wget https://github.com/gohugoio/hugo/releases/download/v0.154.3/hugo_extended_0.154.3_linux-amd64.tar.gz
+tar -xzf hugo_extended_0.154.3_linux-amd64.tar.gz
 sudo mv hugo /usr/local/bin/
-sudo chmod +x /usr/local/bin/hugo
 hugo version
+# hugo v0.154.3+extended linux/amd64 BuildDate=2026-01-06T16:30:17Z VendorInfo=gohugoio
 ```
 
-##### macOS
-```bash
-brew install hugo
-```
+Note: earlier documentation (including the prior version of this report and `CLAUDE.md`) referenced "0.154.1" as the latest Hugo release. That version does not exist on GitHub releases — **0.154.3** is the actual current release and is what was installed and verified. Version numbers referenced in docs should always be re-checked against GitHub releases before being treated as literal, since they age quickly.
 
-##### Windows
-```powershell
-choco install hugo-extended -y
-# or
-scoop install hugo-extended
-# or
-winget install Hugo.Hugo.Extended
-```
+`npm install` succeeded again in this session (13 vulnerabilities: 5 moderate, 8 high — same legacy dev-dependency vulnerabilities as noted previously, non-blocking, unchanged in nature from prior report).
+
+`git submodule update --init --recursive` succeeded, checking out `themes/docsy`.
 
 ---
 
-## 📊 Build Process Simulation
+## 🔧 Issues Found & Fixed
 
-### Expected Build Command
+Running the real build surfaced four distinct failures, resolved in sequence. Each is a genuine issue a future contributor could hit again — this section is the troubleshooting record.
 
-```bash
-hugo --minify
+### 1. Stale submodule state → `unknown output format "print" for kind "section"`
+
+**Build attempt #1** failed with:
 ```
-
-### Expected Output Structure
-
+ERROR failed to create config: unknown output format "print" for kind "section"
 ```
-public/
-├── index.html
-├── community/
-│   ├── index.html
-│   ├── join_discord/
-│   ├── code_of_conduct/
-│   └── join_meetings/
-├── docs/
-│   ├── index.html
-│   └── resources/
-├── css/
-│   └── main.min.css
-└── js/
-    └── main.min.js
+This turned out to be a stale-state artifact from the submodule not yet being fully initialized in this session — no code or config change was needed. Once `git submodule update --init --recursive` completed properly, this error did not recur on the next attempt.
+
+### 2. No Hugo Modules setup → `File to import not found: ../vendor/bootstrap/scss/bootstrap`
+
+**Build attempt #2** failed with:
 ```
+ERROR ... File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap.
+```
+**Root cause**: Docsy's own third-party dependencies (Bootstrap, Font Awesome) are distributed via **Hugo Modules**, not vendored inside the theme repo. The project only had the legacy `theme = ["docsy"]` array in `config.toml` and no `go.mod`, so Hugo had no way to resolve those module dependencies.
 
-### Build Process Steps
+**Fix applied**:
+- Added a project-root `go.mod`:
+  ```
+  module github.com/DXersCommunity/dxers-site
+  go 1.24.7
+  replace github.com/google/docsy => ./themes/docsy
+  require github.com/google/docsy v0.15.0 // indirect
+  ```
+- Changed `config.toml` from `theme = ["docsy"]` to:
+  ```toml
+  [module]
+    [[module.imports]]
+      path = "github.com/google/docsy"
+  ```
+- Ran `hugo mod tidy`, which downloaded Bootstrap/Font Awesome into the Go module cache. This step requires **Go** to be installed (verified go1.24.7) and working network access to the Go module proxy — both were unavailable in the prior session but worked in this one.
 
-1. **Content Processing**
-   - Parse 14 Markdown files
-   - Apply front matter
-   - Generate HTML from Markdown
+### 3. Outdated Docsy checkout → `File is nil; wrap it in if or with`
 
-2. **Template Rendering**
-   - Apply Docsy theme layouts
-   - Process Hugo templates
-   - Generate navigation
+**Build attempt #3** failed with:
+```
+ERROR ... File is nil; wrap it in if or with
+```
+pointing at `Parent.File.UniqueID` inside `themes/docsy/layouts/partials/section-index.html`.
 
-3. **Asset Processing**
-   - Process SCSS with PostCSS
-   - Apply Autoprefixer
-   - Minify CSS and JS
+**Root cause**: the submodule was checked out at an old commit based on Docsy tag `v0.4.0`, which has a known upstream bug (see [google/docsy#1874](https://github.com/google/docsy/issues/1874)), fixed upstream in Docsy PRs #1890/#1947.
 
-4. **Optimization**
-   - HTML minification
-   - Asset fingerprinting
-   - Generate sitemap
+**Fix applied**: `git checkout v0.15.0` inside the `themes/docsy` submodule. This version was chosen deliberately over the newer `v0.16.0`/`v0.17.0` tags because those bump Docsy's required Hugo `min_version` to `0.160.1`, which does not exist as a Hugo release yet, and also restructure the repo into a `theme/` subfolder with a different Go module path. v0.15.0 still only requires Hugo 0.146.0+ and matches this project's Hugo Modules configuration.
 
-### Estimated Build Time
+### 4. Leftover custom layout overrides → `no such template "partials/page-description.html"`
 
-Based on project size (14 content files):
-- **First build**: 5-10 seconds
-- **Incremental builds**: 1-3 seconds
+**Build attempt #4** failed with:
+```
+ERROR ... template: docs/list.html:4:7 ... no such template "partials/page-description.html"
+```
+**Root cause**: two custom layout overrides — `layouts/partials/head.html` and `layouts/docs/list.html` — were leftover workarounds from an even older Docsy checkout, referencing internal template paths that no longer exist in Docsy v0.15.0's native templates (which already correctly handle Google Analytics, Disqus, dark mode, and feedback without an override).
+
+**Fix applied**: deleted both override files.
+
+### 5. Deprecated config keys → build warnings
+
+**Build attempt #5** succeeded but emitted two deprecation warnings:
+```
+WARN  Config 'params.algolia_docsearch' is deprecated: use 'params.search.algolia'.
+WARN  Config parameter '.params.ui.footer_about_disable' is DEPRECATED, use '.params.ui.footer_about_enable' instead.
+```
+**Fix applied**:
+- Removed the unused top-level `algolia_docsearch = false` key (Algolia search isn't in use on this site).
+- Replaced `footer_about_disable = false` with `footer_about_enable = true` under `[params.ui]`. Note this is an inverted boolean, not a simple rename — a naive find/replace would have flipped the behavior.
 
 ---
 
-## 🔍 Potential Issues
+## ✅ Final Build Result
 
-### 1. npm Package Vulnerabilities
-
-**Severity**: Low
-**Impact**: Build process only, not production site
-
-**Details**:
-- 7 moderate vulnerabilities
-- 5 high vulnerabilities
-- Related to dev dependencies (autoprefixer, postcss-cli)
-
-**Recommendation**: Update packages after confirming Hugo build works
-
-```bash
-npm audit fix
-# or for major updates
-npm install autoprefixer@latest postcss-cli@latest --save-dev
+**Build attempt #6: clean success.** `hugo --minify` output:
 ```
-
-### 2. Hugo Version Compatibility
-
-**Risk**: Medium if using version < 0.146.0
-
-**Issue**: Docsy theme v0.12.0+ requires Hugo 0.146.0 minimum
-
-**Symptoms of using old version**:
-- SCSS compilation errors
-- Template rendering failures
-- Missing shortcode support
-
-**Solution**: Install Hugo Extended 0.154.1+ as documented
-
-### 3. Goldmark Parser
-
-**Status**: ✅ Already configured
-
-Config already uses Goldmark (modern Hugo default):
-```toml
-[markup.goldmark.renderer]
-  unsafe = true
+Pages: 29 | Paginator pages: 0 | Non-page files: 1 | Static files: 30 | Processed images: 2 | Aliases: 0 | Cleaned: 0
+Total in ~1.7-2s
 ```
+Zero `WARN` lines, zero `ERROR` lines.
 
-No action required.
+**Output verification** (`public/`):
+- Spot-checked `index.html` — correct site title and content render.
+- Bootstrap CSS classes confirmed present in the compiled `scss/main.min.*.css` (~380KB), confirming the Hugo Modules fix actually pulled in and compiled Bootstrap.
+- Total `public/` directory size ~2.9MB: 29 HTML pages, `sitemap.xml`, `robots.txt`, print versions under `_print/`, RSS `index.xml`, favicons, webfonts all present.
+
+**Dev server verification**: `hugo server` started on `127.0.0.1:1313` with Fast Render Mode active; `curl` against it returned HTTP 200 and the correct page title `DXers - The HCL DX user's group`.
 
 ---
 
-## ✅ Readiness Checklist
+## Architecture Changes Made
 
-### Prerequisites
-- [x] Node.js LTS installed (v22.21.1)
-- [x] npm installed (10.9.4)
-- [x] Git installed
-- [ ] **Hugo Extended 0.154.1+ installed** ⚠️ REQUIRED
+This build verification pass changed the project's theming architecture from a plain Git-submodule theme to **Hugo Modules**, because Docsy's CSS/JS dependencies (Bootstrap, Font Awesome) are only distributed that way:
 
-### Project Setup
-- [x] Repository cloned
-- [x] Git submodules initialized
-- [x] npm dependencies installed
-- [x] Docsy theme present
-- [x] Configuration valid
+- New project-root `go.mod` declaring the module, requiring Go 1.24.7+, and using a local `replace` directive pointing at the `themes/docsy` submodule.
+- `config.toml` theme declaration switched from `theme = ["docsy"]` to a `[[module.imports]]` block.
+- `themes/docsy` submodule pinned to tag **v0.15.0** specifically (not the latest tag) — see reasoning in issue #3 above.
+- Two obsolete custom layout overrides removed (`layouts/partials/head.html`, `layouts/docs/list.html`).
+- Two deprecated `config.toml` params corrected (Algolia key removed, `footer_about_enable` used instead of `footer_about_disable`).
+- `.hugo_build.lock` (created by `hugo server`/`hugo` during builds) added to `.gitignore` — this file should never be committed.
 
-### Content
-- [x] Content files present (14 files)
-- [x] Content structure valid
-- [x] Front matter configured
+Full narrative detail and rationale for the Hugo/Docsy version choices live in `CLAUDE.md` and `HUGO_UPDATE_2026.md`; this report summarizes only what changed and why, not the complete configuration reference.
 
-### Assets
-- [x] Custom SCSS present
-- [x] PostCSS configured
-- [x] Autoprefixer configured
+---
 
-### Build Tools
-- [x] justfile present
-- [x] .env.example present
-- [x] Deployment script present
-- [x] Docker configuration present
+## ✅ Prerequisites Checklist
+
+- [x] **Hugo Extended 0.154.3** installed and verified (`hugo version`)
+- [x] **Go 1.24.7** installed and verified — newly discovered as required, for `hugo mod tidy` under the Hugo Modules setup
+- [x] **Node.js v22.22.2 / npm 10.9.7** installed and verified
+- [x] **Git** installed, submodules initialized (`git submodule update --init --recursive`)
+- [x] Docsy theme submodule pinned to v0.15.0
+- [x] `go.mod` present and Hugo Modules import configured in `config.toml`
+- [x] `npm install` completed successfully
+- [x] Clean `hugo --minify` build produced (0 errors, 0 warnings)
+- [x] `public/` output spot-checked and verified correct
+- [x] `hugo server` dev mode verified working (HTTP 200, correct title)
+
+Go was not previously listed as a project prerequisite; it now is, because `hugo mod tidy` depends on it whenever the Docsy Hugo Module needs to be resolved (e.g. after a fresh clone, or a `go.sum`/module cache miss).
 
 ---
 
 ## 🚀 Next Steps
 
-### Immediate Actions
+This section is now about **ongoing maintenance**, not getting a first build working.
 
-1. **Install Hugo Extended**
-   ```bash
-   # See installation instructions above for your OS
-   hugo version | grep extended
-   ```
-
-2. **Test Build**
-   ```bash
-   hugo --minify
-   ```
-
-3. **Verify Output**
-   ```bash
-   ls -lh public/
-   find public/ -type f -name "*.html" | wc -l
-   ```
-
-### Post-Build Verification
-
-```bash
-# 1. Check build time
-time hugo --minify
-
-# 2. View performance metrics
-hugo --templateMetrics
-
-# 3. Test development server
-hugo server
-
-# 4. Verify site at http://localhost:1313
-```
-
-### Using Justfile (Recommended)
-
-```bash
-# Complete setup
-just setup
-
-# Build site
-just build
-
-# Run development server
-just dev
-
-# Run health check
-just health-check
-
-# View statistics
-just stats
-```
-
----
-
-## 📈 Project Health
-
-| Metric | Value | Status |
-|--------|-------|--------|
-| **Content Files** | 14 | ✅ Good |
-| **npm Packages** | 117 | ✅ Installed |
-| **Theme** | Docsy | ✅ Initialized |
-| **Configuration** | Valid | ✅ Complete |
-| **Hugo** | Not Installed | ⚠️ Required |
-| **Build Ready** | 95% | ⚠️ Awaiting Hugo |
-
----
-
-## 🔧 Troubleshooting
-
-### If Build Fails
-
-#### Error: "hugo: command not found"
-```bash
-# Verify installation
-which hugo
-
-# Add to PATH if needed
-export PATH=$PATH:/usr/local/bin
-```
-
-#### Error: "TOCSS: failed to transform"
-```bash
-# Verify Hugo Extended
-hugo version | grep extended
-
-# If missing, reinstall Hugo Extended
-```
-
-#### Error: "POSTCSS: failed to transform"
-```bash
-# Reinstall dependencies
-rm -rf node_modules package-lock.json
-npm install
-```
-
-#### Error: "Error: module does not exist"
-```bash
-# Initialize submodules
-git submodule update --init --recursive
-```
-
----
-
-## 📝 Summary
-
-**Overall Status**: ⚠️ **95% READY**
-
-**What's Working**:
-- ✅ Node.js environment configured
-- ✅ npm dependencies installed
-- ✅ Git submodules initialized
-- ✅ Project configuration valid
-- ✅ Content structure complete
-- ✅ Development tools available
-
-**What's Needed**:
-- ⚠️ Hugo Extended 0.154.1+ installation
-
-**Action Required**:
-Install Hugo Extended to proceed with build.
-
-**Estimated Time to Build Ready**: 5 minutes (Hugo installation time)
+1. **Before bumping Docsy past v0.15.0**: re-verify carefully. v0.16.0/v0.17.0 raise Docsy's Hugo `min_version` requirement to `0.160.1` (which doesn't exist as a Hugo release yet) and restructure the theme repo into a `theme/` subfolder with a different Go module path — both changes require corresponding updates to `go.mod` and `config.toml`, not just a submodule bump.
+2. **Before hardcoding a Hugo version in docs**: check GitHub releases directly (`https://github.com/gohugoio/hugo/releases`) rather than trusting a previously-documented "latest" number — this report itself found the previously-documented "0.154.1" doesn't exist; the real latest at time of writing is 0.154.3.
+3. **Keep `go.sum`/module cache in sync**: after any Docsy version change, re-run `hugo mod tidy` and commit the resulting lock state so CI/CD (CloudFlare Pages) resolves the same module versions.
+4. **Periodically re-run `npm audit`**: the 13 vulnerabilities (5 moderate, 8 high) are in legacy dev dependencies (`autoprefixer@9.8.6`, `postcss-cli@7.1.2`) and don't block builds, but should be revisited if those packages are ever upgraded.
+5. **CI/CD verification**: confirm CloudFlare Pages' build environment also has Go available (in addition to Hugo Extended and Node.js), since the Hugo Modules setup introduced in this session now requires it at build time, not just for local development.
 
 ---
 
 ## 📚 References
 
-- [Hugo Installation Guide](HUGO_UPDATE_2026.md)
+- [Hugo Update Notes](HUGO_UPDATE_2026.md)
 - [Project Documentation](DOCS.md)
 - [Claude Documentation](CLAUDE.md)
 - [Hugo Official Docs](https://gohugo.io/installation/)
+- [Hugo Releases](https://github.com/gohugoio/hugo/releases)
 - [Docsy Theme Docs](https://www.docsy.dev/docs/)
+- [Docsy issue #1874 (File is nil bug, fixed in v0.15.0)](https://github.com/google/docsy/issues/1874)
 
 ---
 
 **Report Generated**: 2026-01-08
-**Environment**: Linux Ubuntu Noble
-**Hugo Status**: Pending Installation
-**Build Status**: Ready (Hugo Required)
+**Environment**: Linux
+**Hugo Status**: Installed and verified (v0.154.3+extended)
+**Build Status**: ✅ Clean build verified (`hugo --minify`, 0 errors, 0 warnings)

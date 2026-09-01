@@ -14,6 +14,8 @@
 
 The DXers Community website is built with Hugo, a static site generator written in Go, known for its exceptional performance. It uses Google's Docsy theme, specifically designed for technical documentation sites.
 
+Docsy is loaded through a **hybrid Git submodule + Hugo Modules setup**: the theme's template/layout files are checked out as a physical Git submodule (`themes/docsy`), while Docsy's own indirect dependencies (Bootstrap, Font Awesome) are resolved through Hugo Modules via `hugo mod tidy`. This means **Go is a required prerequisite** for local development and builds, alongside Hugo and Node.js. See [Architecture](#architecture) and [Development Environment Setup](#development-environment-setup) for details.
+
 ### Main Features
 
 - ✅ **Speed**: Ultra-fast builds thanks to Hugo
@@ -34,14 +36,24 @@ The DXers Community website is built with Hugo, a static site generator written 
 │    (Static Site Generator)          │
 └──────────────┬──────────────────────┘
                │
-       ┌───────┴────────┐
-       │                │
-┌──────▼──────┐  ┌──────▼──────┐
-│   Docsy     │  │   Content   │
-│   Theme     │  │  (Markdown) │
-└──────┬──────┘  └──────┬──────┘
-       │                │
-       └───────┬────────┘
+       ┌───────┴────────────────────┐
+       │                            │
+┌──────▼──────────────────┐  ┌──────▼──────┐
+│   Docsy Theme            │  │   Content   │
+│   (git submodule:        │  │  (Markdown) │
+│    layouts/templates)    │  │             │
+└──────┬───────────────────┘  └──────┬──────┘
+       │
+┌──────▼───────────────────┐
+│   Hugo Modules            │
+│   (go.mod + hugo mod      │
+│    tidy — resolves        │
+│    Bootstrap, Font        │
+│    Awesome, etc. that     │
+│    Docsy depends on)      │
+└──────┬───────────────────┘
+       │
+       └───────┬────────────────────┘
                │
        ┌───────▼────────┐
        │   PostCSS      │
@@ -54,12 +66,42 @@ The DXers Community website is built with Hugo, a static site generator written 
        └────────────────┘
 ```
 
+**IMPORTANT — this is not a plain "add Docsy as a submodule and it works" setup.** Docsy's own indirect dependencies (Bootstrap, Font Awesome) are distributed as **Hugo Modules**, not as vendored files inside the theme. If they aren't resolved, the build fails with:
+
+```
+ERROR ... File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap.
+```
+
+The working setup combines two mechanisms:
+
+- `themes/docsy` stays a **git submodule** — a physical checkout that provides the theme's own template/layout files (no network needed for these).
+- The project-root `go.mod` declares Docsy as a Hugo Module and replaces it with the local submodule checkout:
+  ```
+  module github.com/DXersCommunity/dxers-site
+
+  go 1.24.7
+
+  replace github.com/google/docsy => ./themes/docsy
+
+  require github.com/google/docsy v0.15.0 // indirect
+  ```
+- `config.toml` imports the theme as a Hugo Module instead of using the legacy `theme = ["docsy"]` array:
+  ```toml
+  [module]
+    [[module.imports]]
+      path = "github.com/google/docsy"
+  ```
+- `hugo mod tidy` (requires **Go**, verified with go1.24.7, and network access) resolves Bootstrap/Font Awesome into the Go module cache and writes `go.sum`.
+
+Docsy is pinned to **v0.15.0** specifically — not "latest" and not a loose `v0.12.0+` range. Docsy v0.16.0/v0.17.0 raise `theme.toml`'s `min_version` to Hugo `0.160.1` (which does not exist yet) and restructure the repo (the Hugo module moves into a `theme/` subfolder, module path becomes `github.com/google/docsy/theme`, and layout paths move from `layouts/_partials/...` to `theme/layouts/_partials/...`). v0.15.0 only requires Hugo 0.146.0+ and matches this project's `[module.imports]` path. Before ever bumping the Docsy version, re-check the target tag's `theme.toml` `min_version` and repo layout.
+
 ### Build Flow
 
-1. **Markdown → HTML**: Hugo converts Markdown content into HTML
-2. **SCSS → CSS**: PostCSS processes SCSS into optimized CSS
-3. **Asset Optimization**: HTML/CSS/JS minification
-4. **Output**: Static files ready for deployment
+1. **Hugo Modules resolution**: `hugo mod tidy` resolves Docsy's Bootstrap/Font Awesome dependencies (only needed when `go.mod`/`go.sum` change)
+2. **Markdown → HTML**: Hugo converts Markdown content into HTML
+3. **SCSS → CSS**: PostCSS processes SCSS into optimized CSS
+4. **Asset Optimization**: HTML/CSS/JS minification
+5. **Output**: Static files ready for deployment
 
 ## Development Environment Setup
 
@@ -73,16 +115,18 @@ The DXers Community website is built with Hugo, a static site generator written 
 # Verify installation
 hugo version
 
-# Expected output:
-# hugo v0.154.1+extended linux/amd64
+# Expected output (verified working in this project):
+# hugo v0.154.3+extended linux/amd64
 ```
+
+> **Note**: Hugo ships frequent releases. Treat `0.154.3` as "the version verified to work at the time of writing," not a value to blindly hardcode forever — always re-check the exact latest patch at [github.com/gohugoio/hugo/releases/latest](https://github.com/gohugoio/hugo/releases/latest) before installing or upgrading, and re-verify a clean `hugo --minify` build afterwards.
 
 **Installation:**
 
 ##### Linux
 ```bash
-# Download latest Extended version
-VERSION=0.154.1
+# Download latest Extended version (check releases/latest for the current patch)
+VERSION=0.154.3
 wget https://github.com/gohugoio/hugo/releases/download/v${VERSION}/hugo_extended_${VERSION}_linux-amd64.tar.gz
 
 # Extract
@@ -114,7 +158,21 @@ scoop install hugo-extended
 winget install Hugo.Hugo.Extended
 ```
 
-#### 2. Node.js and npm
+#### 2. Go
+
+**IMPORTANT**: Go is a **required** prerequisite, not optional. Docsy's indirect dependencies (Bootstrap, Font Awesome) are distributed as Hugo Modules rather than vendored files, and resolving them via `hugo mod tidy` requires a working Go toolchain plus network access. See [Architecture](#architecture) for why.
+
+```bash
+# Verify installation
+go version
+
+# Verified working version in this project:
+# go version go1.24.7 linux/amd64
+```
+
+**Installation**: see [go.dev/doc/install](https://go.dev/doc/install) (or your OS package manager).
+
+#### 3. Node.js and npm
 
 ```bash
 # Verify installation
@@ -125,7 +183,7 @@ npm --version   # 9.x or higher
 npm install
 ```
 
-#### 3. Git
+#### 4. Git
 
 ```bash
 # Clone repository with submodules
@@ -136,7 +194,27 @@ cd dxers-site
 git submodule update --init --recursive
 ```
 
+### Hugo Modules Setup (Docsy Dependencies)
+
+Cloning the submodule is **not enough** on its own — Docsy's Bootstrap/Font Awesome dependencies still need to be resolved through Hugo Modules, or the build fails with `File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap.` (see [Architecture](#architecture)).
+
+```bash
+# Requires Go + network access; resolves dependencies into the Go module
+# cache and writes/updates go.sum
+hugo mod tidy
+```
+
+Run this once after cloning, and again any time `go.mod` changes (e.g. bumping the Docsy version).
+
 ### Initial Configuration
+
+Full verified setup sequence:
+
+```bash
+git submodule update --init --recursive && npm install && hugo mod tidy && hugo --minify
+```
+
+Step by step:
 
 ```bash
 # 1. Clone repository
@@ -146,10 +224,13 @@ cd dxers-site
 # 2. Install npm dependencies
 npm install
 
-# 3. Start development server
+# 3. Resolve Hugo Modules (Bootstrap, Font Awesome, etc. required by Docsy)
+hugo mod tidy
+
+# 4. Start development server
 hugo server
 
-# 4. Open browser
+# 5. Open browser
 # http://localhost:1313
 ```
 
@@ -302,18 +383,42 @@ $navbar-height: 60px;
 
 Directory: `layouts/`
 
-#### Override Single Page
+**Current state**: the project's **only** custom layout override is `layouts/404.html` (the custom 404 page):
 
 ```
 layouts/
-├── 404.html              # Custom 404 page
-├── _default/
-│   ├── baseof.html      # Base template
-│   └── single.html      # Single page template
-└── partials/
-    ├── header.html      # Custom header
-    └── footer.html      # Custom footer
+└── 404.html              # Custom 404 page — the ONLY custom layout override in this project
 ```
+
+Two other overrides — `layouts/partials/head.html` and `layouts/docs/list.html` — used to exist as workarounds for deprecated Hugo/Docsy APIs (`_internal/google_analytics_async.html`, `.Site.DisqusShortname`, etc.) in a much older Docsy checkout. Both were **deleted**: Docsy v0.15.0's native templates already handle Google Analytics, Disqus, dark mode, and feedback correctly, so those workarounds are obsolete.
+
+#### Override Single Page (general mechanism)
+
+Hugo lets you override any theme template by mirroring its path under the project's `layouts/` directory, e.g.:
+
+```
+layouts/
+├── 404.html              # overrides themes/docsy's 404 page
+├── _default/
+│   ├── baseof.html      # would override the base template
+│   └── single.html      # would override the single page template
+└── partials/
+    ├── header.html      # would override the header partial
+    └── footer.html      # would override the footer partial
+```
+
+Only add an override here when Docsy's native (v0.15.0) template genuinely cannot do what you need — check upstream first, since past overrides in this project were removed once the underlying Docsy bugs/API gaps were fixed.
+
+### config.toml — Deprecated Settings Removed
+
+Two legacy settings were identified and corrected in `config.toml`:
+
+| Old (deprecated)                              | New                                          | Notes |
+|------------------------------------------------|-----------------------------------------------|-------|
+| `algolia_docsearch = false` (top-level key)     | *removed*                                     | Deprecated top-level key, unused — this site has no Algolia DocSearch configured |
+| `params.ui.footer_about_disable = false`        | `params.ui.footer_about_enable = true`        | **Inverted boolean**, not a plain rename — `disable = false` became `enable = true` |
+
+If you copy config snippets from older Docsy tutorials or examples, double-check them against the current [Docsy v0.15.0 docs](https://www.docsy.dev/docs/): deprecated keys like `algolia_docsearch` are silently ignored rather than raising an error, which can mask a misconfiguration.
 
 ### Menu Configuration
 
@@ -350,7 +455,9 @@ hugo --minify
 2. **Build output directory**: `public`
 3. **Root directory**: `/`
 4. **Environment variables**:
-   - `HUGO_VERSION`: `0.154.1`
+   - `HUGO_VERSION`: `0.154.3` (verified working; re-check [releases/latest](https://github.com/gohugoio/hugo/releases/latest) before bumping)
+
+**Note**: Since Docsy's dependencies are resolved via Hugo Modules (see [Architecture](#architecture)), make sure `go.mod` and `go.sum` are committed to the repository so the build environment can resolve them during `hugo --minify`.
 
 #### Build Settings
 
@@ -359,7 +466,7 @@ hugo --minify
 # But you can specify the version
 
 # Create file: .hugo-version
-0.154.1
+0.154.3
 ```
 
 ### Deploy Script
@@ -393,16 +500,30 @@ hugo server
 
 ### Docsy Theme Update
 
+**IMPORTANT**: Docsy is pinned to **v0.15.0** — do not blindly run `git submodule update --remote` and track whatever the latest commit is. Docsy v0.16.0/v0.17.0 raise `theme.toml`'s `min_version` to Hugo `0.160.1` (which does not exist yet) and restructure the repo (Hugo module moved into a `theme/` subfolder, module path becomes `github.com/google/docsy/theme`, layout paths move from `layouts/_partials/...` to `theme/layouts/_partials/...`) — incompatible with this project's `go.mod`/`config.toml` setup without further changes.
+
+Before ever bumping the version:
+
 ```bash
-# Update submodule
-git submodule update --remote themes/docsy
+# Check out a specific tag in the submodule
+cd themes/docsy
+git fetch --tags
+git checkout v0.15.0   # or the target version
+cd ../..
+
+# Check the target tag's min_version and repo layout compatibility
+cat themes/docsy/theme.toml | grep min_version
+
+# Update the pin in go.mod to match, then re-resolve Hugo Modules
+hugo mod tidy
 
 # Test
 hugo server
+hugo --minify
 
-# Commit update
-git add themes/docsy
-git commit -m "chore: update Docsy theme"
+# Commit update (submodule pointer + go.mod/go.sum)
+git add themes/docsy go.mod go.sum
+git commit -m "chore: update Docsy theme (verified against theme.toml min_version)"
 ```
 
 ### npm Dependencies Update
@@ -466,6 +587,16 @@ html-validate public/**/*.html
 wget --spider -r -nd -nv -l 5 http://localhost:1313/
 ```
 
+### Verified Build Result
+
+Last confirmed end-to-end run, using the setup documented above (Hugo Extended 0.154.3, Docsy v0.15.0, hybrid submodule + Hugo Modules):
+
+```
+git submodule update --init --recursive && npm install && hugo mod tidy && hugo --minify
+```
+
+Result: **29 Pages, 30 Static files, 2 Processed images, zero warnings, zero errors**, build completed in roughly **1.7–2 seconds**. `hugo server` was also verified working — the local site responded with HTTP 200 and the correct page title. Use this as the expected baseline; any warnings/errors on a fresh clone point to a setup step being skipped (most commonly `hugo mod tidy`, see [Troubleshooting](#troubleshooting)).
+
 ## Troubleshooting
 
 ### Problem: Hugo not found
@@ -489,6 +620,43 @@ git submodule update --init --recursive
 
 # Check submodule
 git submodule status
+```
+
+### Problem: `File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap.`
+
+The git submodule alone is **not** enough — this project uses a hybrid submodule + Hugo Modules setup (see [Architecture](#architecture)), and this error means Docsy's Hugo Modules dependencies (Bootstrap, Font Awesome) were never resolved.
+
+```bash
+# Make sure Go is installed (see Prerequisites)
+go version
+
+# Resolve Hugo Modules (requires network access)
+hugo mod tidy
+
+# Rebuild
+hugo --minify
+```
+
+### Problem: `File is nil; wrap it in if or with` in `section-index.html`
+
+This is a known upstream Docsy bug ([google/docsy#1874](https://github.com/google/docsy/issues/1874)), present in older Docsy checkouts (around tag `v0.4.0`), triggered by this line in `section-index.html`:
+
+```go-html-template
+{{ $pages = (where $pages "Parent.File.UniqueID" "==" $parent.File.UniqueID) }}
+```
+
+It was fixed upstream by PRs [#1890](https://github.com/google/docsy/pull/1890) and [#1947](https://github.com/google/docsy/pull/1947), which add a `{{ if $page.File -}}` nil-guard. **Confirmed fixed in Docsy v0.15.0**, which this project is pinned to. If you hit this error, check that `themes/docsy` is actually at v0.15.0 and not an older commit:
+
+```bash
+git -C themes/docsy describe --tags
+```
+
+### Problem: stale or locked build
+
+Hugo creates a `.hugo_build.lock` file during `hugo server`/`hugo build` runs. It is listed in `.gitignore` and must never be committed. If a build seems stuck, it's safe to remove:
+
+```bash
+rm -f .hugo_build.lock
 ```
 
 ### Problem: PostCSS errors
@@ -535,9 +703,14 @@ hugo --cleanDestinationDir
    hugo --minify
    ```
 
-5. **Submodules**: Update regularly
+5. **Submodules**: Keep Docsy pinned to a verified version (currently **v0.15.0**) — do not blindly run `git submodule update --remote`. Before bumping, check the target tag's `theme.toml` `min_version` and repo layout compatibility (see [Docsy Theme Update](#docsy-theme-update)).
    ```bash
-   git submodule update --remote
+   cd themes/docsy && git fetch --tags && git checkout v0.15.0
+   ```
+
+6. **Hugo Modules**: After any change to `go.mod` (e.g. bumping Docsy), re-run `hugo mod tidy` and commit the updated `go.sum`.
+   ```bash
+   hugo mod tidy
    ```
 
 ---

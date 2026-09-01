@@ -3,11 +3,19 @@ title = "DXers Community Website"
 
 enableRobotsTXT = true
 
-# Hugo allows theme composition (and inheritance). The precedence is from left to right.
-theme = ["docsy"]
-
 # Will give values to .Lastmod etc.
 enableGitInfo = true
+
+# Docsy (pinned to v0.15.0) is loaded as a Hugo Module. The physical checkout
+# lives in themes/docsy (git submodule) and is wired in via the "replace"
+# directive in go.mod, so no network access is needed to resolve the theme
+# itself. Docsy's own indirect dependencies (Bootstrap, Font Awesome) are
+# still resolved as regular Hugo Modules via `hugo mod tidy` (needs Go +
+# network). See CLAUDE.md for the full explanation and why Docsy must NOT
+# be bumped past v0.15.0 without also checking Hugo's version requirement.
+[module]
+  [[module.imports]]
+    path = "github.com/google/docsy"
 
 # Language settings
 contentDir = "content/en"
@@ -112,7 +120,8 @@ github_project_repo = "https://github.com/DXersCommunity/dxers-site"
 gcs_engine_id = "011737558837375720776:fsdu1nryfng"
 
 # Enable Algolia DocSearch
-algolia_docsearch = false
+# Note: top-level "algolia_docsearch" is deprecated; use [params.search.algolia] instead.
+# Left disabled (no [params.search] section) since Algolia is not in use.
 
 # Enable Lunr.js offline search
 offlineSearch = false
@@ -130,8 +139,9 @@ breadcrumb_disable = false
 sidebar_search_disable = false
 #  Set to false if you don't want to display a logo (/assets/icons/logo.svg) in the top nav bar
 navbar_logo = true
-# Set to true to disable the About link in the site footer
-footer_about_disable = false
+# Set to false to disable the About link in the site footer
+# Note: "footer_about_disable" was replaced by "footer_about_enable" (inverted logic).
+footer_about_enable = true
 
 # Adds a H2 section titled "Feedback" to the bottom of each doc. The responses are sent to Google Analytics as events.
 # This feature depends on [services.googleAnalytics] and will be disabled if "services.googleAnalytics.id" is not set.

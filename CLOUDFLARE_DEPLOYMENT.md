@@ -67,12 +67,12 @@ compatibility_date = "2024-01-01"
 pages_build_output_dir = "public"
 
 [env.production.vars]
-HUGO_VERSION = "0.154.1"
+HUGO_VERSION = "0.154.3"
 NODE_VERSION = "22"
 # ... more vars
 
 [env.preview.vars]
-HUGO_VERSION = "0.154.1"
+HUGO_VERSION = "0.154.3"
 NODE_VERSION = "22"
 # ... more vars
 ```
@@ -84,7 +84,7 @@ NODE_VERSION = "22"
 Used for deployments to the `dxers-site` branch (production).
 
 **Variables:**
-- `HUGO_VERSION`: `0.154.1` - Hugo Extended version
+- `HUGO_VERSION`: `0.154.3` - Hugo Extended version
 - `HUGO_ENV`: `production` - Production mode
 - `NODE_VERSION`: `22` - Node.js LTS version
 - `SITE_URL`: `https://www.dxers.ug` - Production URL
@@ -94,7 +94,7 @@ Used for deployments to the `dxers-site` branch (production).
 Used for pull request previews and feature branch deployments.
 
 **Variables:**
-- `HUGO_VERSION`: `0.154.1` - Same Hugo version
+- `HUGO_VERSION`: `0.154.3` - Same Hugo version
 - `HUGO_ENV`: `development` - Development mode
 - `NODE_VERSION`: `22` - Same Node version
 - `HUGO_ENABLEGITINFO`: `false` - Disable GitInfo for faster builds
@@ -181,7 +181,7 @@ Go to: **Pages Project** → **Settings** → **Environment Variables**
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `HUGO_VERSION` | `0.154.1` | Hugo Extended version |
+| `HUGO_VERSION` | `0.154.3` | Hugo Extended version |
 | `NODE_VERSION` | `22` | Node.js version |
 | `HUGO_ENV` | `production` | Hugo environment |
 | `NODE_ENV` | `production` | Node environment |
@@ -190,7 +190,7 @@ Go to: **Pages Project** → **Settings** → **Environment Variables**
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `HUGO_VERSION` | `0.154.1` | Hugo Extended version |
+| `HUGO_VERSION` | `0.154.3` | Hugo Extended version |
 | `NODE_VERSION` | `22` | Node.js version |
 | `HUGO_ENV` | `development` | Hugo environment |
 | `NODE_ENV` | `development` | Node environment |
@@ -261,7 +261,7 @@ wrangler pages project create dxers-site
 
 **Build command:**
 ```bash
-npm install && hugo --minify
+npm install && hugo mod tidy && hugo --minify
 ```
 
 **Build output directory:**
@@ -276,9 +276,12 @@ public
 
 **Environment variables:**
 ```
-HUGO_VERSION=0.154.1
+HUGO_VERSION=0.154.3
 NODE_VERSION=22
+GO_VERSION=1.21
 ```
+
+⚠️ **`GO_VERSION` is required.** Docsy is loaded as a Hugo Module and its own dependencies (Bootstrap, Font Awesome) are resolved via `hugo mod tidy`, which needs Go on the build machine. CloudFlare Pages' build image includes Go by default, but pin `GO_VERSION` explicitly so the build doesn't silently break if the default changes. Without Go available, the build fails with `File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap`. See [CLAUDE.md](CLAUDE.md#module-architecture-hybrid-submodule--hugo-modules) for the full explanation.
 
 ### Build Process
 
@@ -287,12 +290,19 @@ NODE_VERSION=22
    npm install
    ```
 
-2. **Build Hugo Site**
+2. **Resolve Docsy's Hugo Module Dependencies**
+   ```bash
+   hugo mod tidy
+   ```
+   Downloads Bootstrap and Font Awesome (Docsy's indirect dependencies) into the Go module cache. Requires Go and network access to the Go module proxy.
+
+3. **Build Hugo Site**
    ```bash
    hugo --minify
    ```
+   Verified locally: 29 pages, 30 static files, 2 processed images, zero warnings/errors, ~1.7–2s.
 
-3. **Output to `public/`**
+4. **Output to `public/`**
    - Static HTML, CSS, JS
    - Optimized and minified
 
@@ -310,10 +320,10 @@ NODE_VERSION=22
 ```bash
 # Check wrangler.toml has correct HUGO_VERSION
 # Production and preview should both have:
-HUGO_VERSION = "0.154.1"
+HUGO_VERSION = "0.154.3"
 
 # Or set in CloudFlare Dashboard:
-# Settings → Environment Variables → HUGO_VERSION = 0.154.1
+# Settings → Environment Variables → HUGO_VERSION = 0.154.3
 ```
 
 #### 2. Build Fails: "Error: failed to extract shortcode"
@@ -324,7 +334,7 @@ HUGO_VERSION = "0.154.1"
 ```bash
 # Hugo Extended is automatically used when HUGO_VERSION is set
 # Ensure version is 0.146.0 or higher
-HUGO_VERSION = "0.154.1"
+HUGO_VERSION = "0.154.3"
 ```
 
 #### 3. PostCSS Errors
@@ -334,8 +344,23 @@ HUGO_VERSION = "0.154.1"
 **Solution:**
 ```bash
 # Ensure build command includes npm install:
-BUILD_COMMAND = "npm install && hugo --minify"
+BUILD_COMMAND = "npm install && hugo mod tidy && hugo --minify"
 ```
+
+#### 3b. Build Fails: "File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap"
+
+**Cause:** Docsy's own dependencies (Bootstrap, Font Awesome) are Hugo Modules, not vendored files. The build command is missing `hugo mod tidy`, or Go isn't available in the build image.
+
+**Solution:**
+```bash
+# Build command must include hugo mod tidy BEFORE hugo build:
+BUILD_COMMAND = "npm install && hugo mod tidy && hugo --minify"
+
+# And Go must be available — set explicitly:
+GO_VERSION = "1.21"
+```
+
+This was actually encountered and fixed during local build verification — see [BUILD_READINESS_REPORT.md](BUILD_READINESS_REPORT.md) and [CLAUDE.md](CLAUDE.md#module-architecture-hybrid-submodule--hugo-modules) for the full root-cause writeup.
 
 #### 4. Preview Deployments Not Working
 
