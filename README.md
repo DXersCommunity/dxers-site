@@ -149,10 +149,11 @@ dxers-site/
 │   ├── community/         # Community pages
 │   └── docs/              # Documentation
 ├── layouts/               # Custom Hugo layouts (only 404.html now)
+├── static/                # Files copied verbatim into public/ (_headers, _redirects)
 ├── themes/docsy/          # Docsy theme (submodule, pinned to v0.15.0)
 ├── config.toml            # Main Hugo configuration
 ├── go.mod / go.sum        # Hugo Modules manifest (Docsy dependency resolution)
-├── wrangler.toml          # CloudFlare Pages configuration
+├── wrangler.toml          # CloudFlare Pages config (name/vars only — see CLOUDFLARE_DEPLOYMENT.md)
 ├── justfile               # Just command runner recipes
 ├── package.json           # npm dependencies
 ├── .env.example           # Environment variables template

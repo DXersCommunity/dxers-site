@@ -1,0 +1,33 @@
+# CloudFlare Pages custom headers
+# Docs: https://developers.cloudflare.com/pages/configuration/headers/
+#
+# This file lives in static/ so Hugo copies it verbatim into public/_headers
+# at build time. It replaces the [[headers]] blocks that used to be in
+# wrangler.toml — CloudFlare Pages' wrangler.toml (BETA) support does not
+# accept a top-level "headers" field at all (confirmed by a real deploy
+# failure); _headers is the actual supported mechanism for Pages projects.
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable

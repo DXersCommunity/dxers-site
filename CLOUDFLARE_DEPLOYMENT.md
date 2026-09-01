@@ -5,26 +5,72 @@ Complete guide for deploying the DXers Community Website to CloudFlare Pages.
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Prerequisites](#prerequisites)
-3. [Configuration](#configuration)
-4. [Deployment Methods](#deployment-methods)
-5. [Environment Variables](#environment-variables)
-6. [Troubleshooting](#troubleshooting)
+2. [What wrangler.toml Actually Supports (Read This First)](#what-wranglertoml-actually-supports-read-this-first)
+3. [Prerequisites](#prerequisites)
+4. [Configuration](#configuration)
+5. [Deployment Methods](#deployment-methods)
+6. [Environment Variables](#environment-variables)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Overview
 
-The DXers Community Website is configured for deployment to **CloudFlare Pages** using the **Wrangler CLI** and **wrangler.toml** configuration.
+The DXers Community Website deploys to **CloudFlare Pages**. Configuration is split across three places, because CloudFlare Pages' `wrangler.toml` support (BETA) only accepts a small subset of fields:
+
+- **`wrangler.toml`** — project name, compatibility date, build output dir, and per-environment variables only.
+- **`static/_headers` and `static/_redirects`** — custom headers and redirects (Hugo copies these verbatim into `public/` at build time).
+- **CloudFlare Dashboard** — the actual build command, output directory override, production/preview branch rules, Web Analytics, and secrets.
 
 ### Key Features
 
-- ✅ **Automatic Deployments**: Git-based deployments from main branch
-- ✅ **Preview Deployments**: Automatic previews for pull requests
-- ✅ **Environment-Specific Configs**: Separate production and preview settings
-- ✅ **Custom Headers**: Security and caching headers configured
-- ✅ **Redirects**: URL redirects for Discord and GitHub
-- ✅ **Hugo & Node Version Control**: Specify exact versions per environment
+- ✅ **Automatic Deployments**: Git-based deployments from the production branch (set in the Dashboard)
+- ✅ **Preview Deployments**: Automatic previews for pull requests and feature branches
+- ✅ **Environment-Specific Vars**: Separate `[env.production.vars]` / `[env.preview.vars]` in `wrangler.toml`
+- ✅ **Custom Headers**: Security and caching headers via `static/_headers`
+- ✅ **Redirects**: URL redirects for Discord and GitHub via `static/_redirects`
+- ✅ **Hugo & Node Version Control**: Pinned per environment via `wrangler.toml` vars
+
+---
+
+## What wrangler.toml Actually Supports (Read This First)
+
+A real CloudFlare Pages deploy of an earlier version of `wrangler.toml` (one that included a `[build]` table, `[build.environment]`, and top-level `[deployment]`, `[[headers]]`, `[[redirects]]`, `[functions]`, `[analytics]`, `[error_pages]` sections) failed at the configuration-validation step, **before the Hugo build even started**:
+
+```
+▲ [WARNING] Processing .../wrangler.toml configuration:
+    - Unexpected fields found in build field: "environment"
+    - Unexpected fields found in top-level field: "deployment","headers","redirects","functions","analytics","error_pages"
+
+✘ [ERROR] Running configuration file validation for Pages:
+    - Configuration file for Pages projects does not support "build"
+
+Failed: unable to read the Wrangler configuration file with code: 1
+Failed: an internal error occurred.
+```
+
+**Root cause**: `[build]` (with `command`, `cwd`, `watch_dir`) is a **Workers-only** wrangler.toml concept — CloudFlare Pages rejects it outright, it's not just ignored. The rest of the removed fields (`deployment`, `headers`, `redirects`, `functions`, `analytics`, `error_pages`) simply aren't wrangler.toml fields for Pages at all, on any beta version.
+
+**What Pages' `wrangler.toml` (BETA) actually accepts**, confirmed by this error (this project uses all of these, nothing more):
+- `name`
+- `compatibility_date`
+- `pages_build_output_dir`
+- `[env.<name>.vars]` (arbitrary key/value environment variables per environment)
+
+Everything else has a CloudFlare-native home that isn't wrangler.toml:
+
+| Removed from wrangler.toml | Where it actually lives now |
+|---|---|
+| `[build]` command | Dashboard: **Settings → Builds & deployments → Build configuration** |
+| `[build.environment]` | Merged into `[env.production.vars]` / `[env.preview.vars]` (already were separate, kept) |
+| `[deployment]` (production/preview branch rules) | Dashboard: **Settings → Builds & deployments → Branch deployments** |
+| `[[headers]]` | [`static/_headers`](https://developers.cloudflare.com/pages/configuration/headers/) — Hugo copies it into `public/_headers` |
+| `[[redirects]]` | [`static/_redirects`](https://developers.cloudflare.com/pages/configuration/redirects/) — Hugo copies it into `public/_redirects` |
+| `[functions]` | A `functions/` directory at the repo root (file-based routing) — not used by this project; no declaration needed either way |
+| `[analytics]` | Dashboard toggle: **Analytics & Logs → Web Analytics** (injects its own beacon script) |
+| `[error_pages]` | Nothing needed — Pages automatically serves `public/404.html` (already generated by `layouts/404.html`) for unmatched routes |
+
+Before ever adding a field back to `wrangler.toml`, check the [official Pages wrangler.toml docs](https://developers.cloudflare.com/pages/configuration/wrangler-configuration/) — the error message above is the ground truth for what's rejected, not assumptions carried over from Workers' `wrangler.toml`.
 
 ---
 
@@ -59,7 +105,7 @@ wrangler login
 
 ### wrangler.toml Structure
 
-The `wrangler.toml` file contains all deployment configuration:
+The `wrangler.toml` file now contains **only** what Pages actually supports:
 
 ```toml
 name = "dxers-site"
@@ -69,58 +115,57 @@ pages_build_output_dir = "public"
 [env.production.vars]
 HUGO_VERSION = "0.154.3"
 NODE_VERSION = "22"
+GO_VERSION = "1.21"
 # ... more vars
 
 [env.preview.vars]
 HUGO_VERSION = "0.154.3"
 NODE_VERSION = "22"
+GO_VERSION = "1.21"
 # ... more vars
 ```
 
-### Key Sections
+#### 1. **Production Environment** (`env.production.vars`)
 
-#### 1. **Production Environment** (`env.production`)
+Injected into the build environment for deployments from the production branch (set in the Dashboard, see below).
 
-Used for deployments to the `dxers-site` branch (production).
-
-**Variables:**
 - `HUGO_VERSION`: `0.154.3` - Hugo Extended version
 - `HUGO_ENV`: `production` - Production mode
 - `NODE_VERSION`: `22` - Node.js LTS version
+- `GO_VERSION`: `1.21` - Required for `hugo mod tidy` (Docsy's Hugo Module dependencies)
 - `SITE_URL`: `https://www.dxers.ug` - Production URL
 
-#### 2. **Preview Environment** (`env.preview`)
+#### 2. **Preview Environment** (`env.preview.vars`)
 
 Used for pull request previews and feature branch deployments.
 
-**Variables:**
 - `HUGO_VERSION`: `0.154.3` - Same Hugo version
 - `HUGO_ENV`: `development` - Development mode
-- `NODE_VERSION`: `22` - Same Node version
 - `HUGO_ENABLEGITINFO`: `false` - Disable GitInfo for faster builds
 
-#### 3. **Headers**
+### Headers — `static/_headers`
 
-Custom HTTP headers for security and caching:
+Custom HTTP headers now live in [`static/_headers`](../static/_headers), using CloudFlare Pages' native [`_headers` file format](https://developers.cloudflare.com/pages/configuration/headers/) (**not** TOML):
 
-```toml
-[[headers]]
-for = "/*"
-[headers.values]
-X-Frame-Options = "DENY"
-X-Content-Type-Options = "nosniff"
-# ... more security headers
+```
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
 ```
 
-#### 4. **Redirects**
+Hugo's default `static/` directory is copied verbatim into `public/` on every build (no config needed — verified with a local `hugo --minify`: static file count went from 30 to 32 after adding `_headers` and `_redirects`). Do **not** add a `[[headers]]` block to `wrangler.toml` — it will fail the exact same way documented above.
 
-URL redirects for convenience:
+### Redirects — `static/_redirects`
 
-```toml
-[[redirects]]
-from = "/discord"
-to = "https://discord.gg/RtG4nyCEDX"
-status = 301
+Same mechanism, [`static/_redirects`](../static/_redirects), CloudFlare's native [`_redirects` file format](https://developers.cloudflare.com/pages/configuration/redirects/):
+
+```
+/discord  https://discord.gg/RtG4nyCEDX  301
+/github   https://github.com/DXersCommunity/dxers-site  301
 ```
 
 ---
@@ -129,14 +174,25 @@ status = 301
 
 ### Method 1: Automatic Git Deployment (Recommended)
 
+**One-time setup in the Dashboard** (this is what replaces the old `[build]` / `[deployment]` wrangler.toml sections):
+
+1. Go to **Pages Project → Settings → Builds & deployments → Build configuration**:
+   - **Framework preset**: `Hugo` (or None — the build command below overrides the preset anyway)
+   - **Build command**: `npm install && hugo mod tidy && hugo --minify`
+   - **Build output directory**: `public`
+   - **Root directory**: `/`
+2. Go to **Settings → Builds & deployments → Branch deployments**:
+   - **Production branch**: `dxers-site`
+   - **Preview deployments**: enable for all branches (or restrict to specific patterns, e.g. `feat/*`, `fix/*`, `docs/*`, `chore/*`, `claude/*`)
+
 **Production:**
-1. Push to `dxers-site` branch
+1. Push to the `dxers-site` branch
 2. CloudFlare Pages automatically builds and deploys
 3. Available at https://www.dxers.ug
 
 **Preview:**
-1. Create pull request or push to feature branch
-2. CloudFlare Pages creates preview deployment
+1. Create a pull request or push to a feature branch
+2. CloudFlare Pages creates a preview deployment
 3. Preview URL provided in PR comments
 
 ### Method 2: Wrangler CLI
@@ -161,6 +217,8 @@ just cf-deploy-preview
 wrangler pages deploy public --project-name=dxers-site --branch=preview
 ```
 
+Note: `wrangler pages deploy` uploads an already-built `public/` directory — it does **not** run the build command from the Dashboard. Run `just build` (or `npm install && hugo mod tidy && hugo --minify`) first.
+
 ### Method 3: Manual Upload (Dashboard)
 
 1. Build site locally: `just build`
@@ -173,9 +231,9 @@ wrangler pages deploy public --project-name=dxers-site --branch=preview
 
 ## Environment Variables
 
-### Required Variables (Set in CloudFlare Dashboard)
+### Variables set via wrangler.toml (`[env.*.vars]`)
 
-Go to: **Pages Project** → **Settings** → **Environment Variables**
+These are read by CloudFlare Pages' build environment automatically — no Dashboard action needed for these specific ones, since they're already committed:
 
 #### Production Variables
 
@@ -183,6 +241,7 @@ Go to: **Pages Project** → **Settings** → **Environment Variables**
 |----------|-------|-------------|
 | `HUGO_VERSION` | `0.154.3` | Hugo Extended version |
 | `NODE_VERSION` | `22` | Node.js version |
+| `GO_VERSION` | `1.21` | Required for `hugo mod tidy` |
 | `HUGO_ENV` | `production` | Hugo environment |
 | `NODE_ENV` | `production` | Node environment |
 
@@ -192,16 +251,17 @@ Go to: **Pages Project** → **Settings** → **Environment Variables**
 |----------|-------|-------------|
 | `HUGO_VERSION` | `0.154.3` | Hugo Extended version |
 | `NODE_VERSION` | `22` | Node.js version |
+| `GO_VERSION` | `1.21` | Required for `hugo mod tidy` |
 | `HUGO_ENV` | `development` | Hugo environment |
 | `NODE_ENV` | `development` | Node environment |
 
-### Optional Variables
+### Secrets (set only in the Dashboard, never in wrangler.toml)
 
-| Variable | Value | Description |
-|----------|-------|-------------|
-| `HUGO_ENABLEGITINFO` | `true`/`false` | Enable Git info |
-| `ENABLE_ANALYTICS` | `true`/`false` | Enable analytics |
-| `ENABLE_SEARCH` | `true`/`false` | Enable search |
+Go to: **Pages Project → Settings → Environment Variables**, and mark as **Encrypted**:
+
+| Variable | Purpose |
+|----------|---------|
+| `CLOUDFLARE_API_TOKEN` | Only needed for CLI/CI-driven deploys, not for git-integrated builds |
 
 ---
 
@@ -255,9 +315,9 @@ wrangler pages project create dxers-site
 
 ## Build Configuration
 
-### CloudFlare Pages Build Settings
+### CloudFlare Pages Build Settings (Dashboard only — NOT wrangler.toml)
 
-**Framework preset:** Hugo
+**Framework preset:** Hugo (or None)
 
 **Build command:**
 ```bash
@@ -274,14 +334,9 @@ public
 /
 ```
 
-**Environment variables:**
-```
-HUGO_VERSION=0.154.3
-NODE_VERSION=22
-GO_VERSION=1.21
-```
+⚠️ **This must be set in the Dashboard.** `wrangler.toml`'s `[build]` table is a Workers-only concept and is rejected outright for Pages projects (see [What wrangler.toml Actually Supports](#what-wranglertoml-actually-supports-read-this-first)). `pages_build_output_dir` in `wrangler.toml` only mirrors the output directory for CLI flows (`wrangler pages dev`/`deploy`) — it does not set the actual build command the CI runs.
 
-⚠️ **`GO_VERSION` is required.** Docsy is loaded as a Hugo Module and its own dependencies (Bootstrap, Font Awesome) are resolved via `hugo mod tidy`, which needs Go on the build machine. CloudFlare Pages' build image includes Go by default, but pin `GO_VERSION` explicitly so the build doesn't silently break if the default changes. Without Go available, the build fails with `File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap`. See [CLAUDE.md](CLAUDE.md#module-architecture-hybrid-submodule--hugo-modules) for the full explanation.
+⚠️ **`GO_VERSION` is required** (set via `wrangler.toml`'s `[env.*.vars]`, see above). Docsy is loaded as a Hugo Module and its own dependencies (Bootstrap, Font Awesome) are resolved via `hugo mod tidy`, which needs Go on the build machine. Without it, the build fails with `File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap`. See [CLAUDE.md](CLAUDE.md#module-architecture-hybrid-submodule--hugo-modules) for the full explanation.
 
 ### Build Process
 
@@ -300,10 +355,10 @@ GO_VERSION=1.21
    ```bash
    hugo --minify
    ```
-   Verified locally: 29 pages, 30 static files, 2 processed images, zero warnings/errors, ~1.7–2s.
+   Verified locally: 29 pages, 32 static files (including `_headers`/`_redirects`), 2 processed images, zero warnings/errors.
 
 4. **Output to `public/`**
-   - Static HTML, CSS, JS
+   - Static HTML, CSS, JS, `_headers`, `_redirects`
    - Optimized and minified
 
 ---
@@ -311,6 +366,27 @@ GO_VERSION=1.21
 ## Troubleshooting
 
 ### Common Issues
+
+#### 0. Deploy Fails Before the Build Even Starts: "Configuration file for Pages projects does not support \"build\""
+
+This is the exact failure this guide was rewritten to document. Full log excerpt:
+
+```
+Found wrangler.toml file. Reading build configuration...
+▲ [WARNING] Processing .../wrangler.toml configuration:
+    - Unexpected fields found in build field: "environment"
+    - Unexpected fields found in top-level field: "deployment","headers","redirects","functions","analytics","error_pages"
+
+✘ [ERROR] Running configuration file validation for Pages:
+    - Configuration file for Pages projects does not support "build"
+
+Failed: unable to read the Wrangler configuration file with code: 1
+Failed: an internal error occurred.
+```
+
+**Cause:** `wrangler.toml` had a `[build]` table and/or top-level `deployment`/`headers`/`redirects`/`functions`/`analytics`/`error_pages` sections — none of these are valid for a Pages project's config file.
+
+**Solution:** Strip `wrangler.toml` down to `name`, `compatibility_date`, `pages_build_output_dir`, and `[env.*.vars]` only. Move headers/redirects to `static/_headers`/`static/_redirects`, and set the build command / branch rules in the Dashboard. See [What wrangler.toml Actually Supports](#what-wranglertoml-actually-supports-read-this-first) for the full mapping. This project's current `wrangler.toml` already reflects the fix — if this error reappears, someone re-added an unsupported field.
 
 #### 1. Build Fails: "hugo: command not found"
 
@@ -341,46 +417,51 @@ HUGO_VERSION = "0.154.3"
 
 **Cause:** npm dependencies not installed
 
-**Solution:**
-```bash
-# Ensure build command includes npm install:
-BUILD_COMMAND = "npm install && hugo mod tidy && hugo --minify"
+**Solution:** Ensure the Dashboard's build command includes `npm install`:
+```
+npm install && hugo mod tidy && hugo --minify
 ```
 
 #### 3b. Build Fails: "File to import not found or unreadable: ../vendor/bootstrap/scss/bootstrap"
 
-**Cause:** Docsy's own dependencies (Bootstrap, Font Awesome) are Hugo Modules, not vendored files. The build command is missing `hugo mod tidy`, or Go isn't available in the build image.
+**Cause:** Docsy's own dependencies (Bootstrap, Font Awesome) are Hugo Modules, not vendored files. The Dashboard build command is missing `hugo mod tidy`, or Go isn't available in the build image.
 
-**Solution:**
-```bash
-# Build command must include hugo mod tidy BEFORE hugo build:
-BUILD_COMMAND = "npm install && hugo mod tidy && hugo --minify"
-
-# And Go must be available — set explicitly:
-GO_VERSION = "1.21"
+**Solution:** Set the Dashboard build command to include `hugo mod tidy` before `hugo build`, and ensure `GO_VERSION` is set via `wrangler.toml`'s `[env.*.vars]`:
+```
+npm install && hugo mod tidy && hugo --minify
 ```
 
-This was actually encountered and fixed during local build verification — see [BUILD_READINESS_REPORT.md](BUILD_READINESS_REPORT.md) and [CLAUDE.md](CLAUDE.md#module-architecture-hybrid-submodule--hugo-modules) for the full root-cause writeup.
+This was encountered and fixed during local build verification — see [BUILD_READINESS_REPORT.md](BUILD_READINESS_REPORT.md) and [CLAUDE.md](CLAUDE.md#module-architecture-hybrid-submodule--hugo-modules) for the full root-cause writeup.
 
 #### 4. Preview Deployments Not Working
 
-**Cause:** Branch pattern not matching
+**Cause:** Branch deployment rules misconfigured — this is a **Dashboard** setting, not a `wrangler.toml` field (there is no `[deployment]` table for Pages; adding one causes issue #0 above).
 
-**Solution:**
-```toml
-# In wrangler.toml, check preview_branch_includes:
-[deployment]
-preview_branch_includes = ["feat/*", "fix/*", "docs/*", "chore/*", "claude/*"]
-```
+**Solution:** Go to **Pages Project → Settings → Builds & deployments → Branch deployments** and verify preview deployments are enabled for the branches you expect (e.g. `feat/*`, `fix/*`, `docs/*`, `chore/*`, `claude/*`, or "all non-production branches").
 
 #### 5. Environment Variables Not Applied
 
-**Cause:** Variables set in wrong environment
+**Cause:** Variables set in wrong environment, or not yet redeployed
 
 **Solution:**
-1. Go to CloudFlare Dashboard → Pages → Settings → Environment Variables
-2. Verify variables are set for correct environment (Production vs Preview)
-3. Redeploy to apply changes
+1. Check `wrangler.toml`'s `[env.production.vars]` / `[env.preview.vars]` for the committed defaults
+2. For secrets or overrides, go to CloudFlare Dashboard → Pages → Settings → Environment Variables
+3. Verify variables are set for correct environment (Production vs Preview)
+4. Redeploy to apply changes
+
+#### 6. Headers or Redirects Not Applied
+
+**Cause:** `static/_headers` / `static/_redirects` missing from the build output, or a typo in the file syntax.
+
+**Solution:**
+```bash
+# Verify locally after a build:
+hugo --minify
+ls public/_headers public/_redirects
+cat public/_headers
+cat public/_redirects
+```
+If these files are missing from `public/`, check that `static/_headers` and `static/_redirects` exist at the project root and that `config.toml` doesn't override `staticDir`.
 
 ---
 
@@ -440,7 +521,7 @@ Pages → Deployments → Clear build cache
 # Permissions required:
 # - Account → Cloudflare Pages → Edit
 
-# Set in .env
+# Set in .env (never commit .env)
 CLOUDFLARE_API_TOKEN=your_token_here
 ```
 
@@ -448,7 +529,7 @@ CLOUDFLARE_API_TOKEN=your_token_here
 
 ```bash
 # Use CloudFlare Dashboard for secrets
-# Don't commit to wrangler.toml or .env
+# Don't commit secrets to wrangler.toml or .env
 
 # Set as encrypted environment variables
 # Pages → Settings → Environment Variables
@@ -456,7 +537,7 @@ CLOUDFLARE_API_TOKEN=your_token_here
 
 ### 3. Enable Security Headers
 
-Already configured in `wrangler.toml`:
+Configured in **`static/_headers`** (not `wrangler.toml` — see [What wrangler.toml Actually Supports](#what-wranglertoml-actually-supports-read-this-first)):
 - `X-Frame-Options: DENY`
 - `X-Content-Type-Options: nosniff`
 - `X-XSS-Protection: 1; mode=block`
@@ -464,13 +545,9 @@ Already configured in `wrangler.toml`:
 
 ### 4. Use Branch Protection
 
-```toml
-[deployment]
-production_branch = "dxers-site"
-
-# Only this branch deploys to production
-# All others are preview deployments
-```
+Set in **Dashboard → Settings → Builds & deployments → Branch deployments** (not `wrangler.toml`'s `[deployment]`, which doesn't exist for Pages):
+- **Production branch**: `dxers-site` — only this branch deploys to production
+- All others produce preview deployments
 
 ---
 
@@ -478,11 +555,7 @@ production_branch = "dxers-site"
 
 ### CloudFlare Web Analytics
 
-Enabled in `wrangler.toml`:
-```toml
-[analytics]
-enabled = true
-```
+Enable via **Dashboard → Analytics & Logs → Web Analytics** (not `wrangler.toml`'s `[analytics]`, which doesn't exist for Pages). This injects a beacon script automatically — no code changes needed.
 
 View analytics:
 1. Go to CloudFlare Dashboard
@@ -516,6 +589,9 @@ CloudFlare provides:
 
 ### CloudFlare Documentation
 - [CloudFlare Pages](https://developers.cloudflare.com/pages/)
+- [Pages wrangler.toml Configuration](https://developers.cloudflare.com/pages/configuration/wrangler-configuration/)
+- [Pages Headers (`_headers`)](https://developers.cloudflare.com/pages/configuration/headers/)
+- [Pages Redirects (`_redirects`)](https://developers.cloudflare.com/pages/configuration/redirects/)
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/)
 - [Hugo on Pages](https://developers.cloudflare.com/pages/framework-guides/deploy-a-hugo-site/)
 
@@ -531,6 +607,6 @@ CloudFlare provides:
 
 ---
 
-**Last Updated:** 2026-01-08
+**Last Updated:** 2026-09-01 (corrected against a real CloudFlare Pages deploy failure — `wrangler.toml` previously included unsupported `[build]`/`[deployment]`/`[[headers]]`/`[[redirects]]`/`[functions]`/`[analytics]`/`[error_pages]` fields)
 **CloudFlare Pages:** Recommended hosting platform
 **Wrangler Version:** 3.x+
