@@ -365,19 +365,23 @@ Another description
 
 File: `assets/scss/_variables_project.scss`
 
+**This file is no longer an empty placeholder.** It is the designated Docsy override point, and it is currently the only thing restoring two brand defaults that the Docsy v0.15.0 upgrade silently dropped (see "homepage looks unstyled" in [Troubleshooting](#troubleshooting) for the full incident):
+
 ```scss
-/*
- * Bootstrap and Docsy variable customizations
- */
+// Docsy v0.7.0+ made Google Fonts opt-in (was unconditional before v0.7.0)
+$td-enable-google-fonts: true;
 
-// Primary colors
-$primary: #007bff;
+// Old Docsy set $orange: #BA5A31 !default itself; v0.15.0 just forwards
+// Bootstrap's stock #fd7e14 instead. Restore the site's brand color,
+// used by the homepage hero (`{{< blocks/cover color="orange" >}}`).
+$orange: #ba5a31;
+```
+
+Any further Bootstrap/Docsy variable overrides (additional colors, fonts, component sizing) should be added to this same file, above or below the two existing overrides — e.g.:
+
+```scss
+// Additional example overrides
 $secondary: #6c757d;
-
-// Fonts
-$font-family-sans-serif: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-
-// Sizes
 $navbar-height: 60px;
 ```
 
@@ -684,6 +688,29 @@ contentDir = "content/en"
 **Verification after the fix**: no `/en/` output directory at all anymore — `community/`, `docs/`, `search/` sit directly under `public/`, matching production's URL structure. `public/index.html` grew from 19718 bytes (empty stub) to 22560 bytes and now contains the hero cover block, both resized `featured-background_*.jpg` images, and both call-to-action buttons. Page count dropped from 29 to **27** (the two duplicate/phantom pages produced by the double-render are gone). 32 static files, 2 processed images, zero WARN/ERROR, ~1.6s build.
 
 > **Note, not a bug**: preview deployments (CloudFlare Pages, `HUGO_ENV=development` per `wrangler.toml`) intentionally serve unminified, unfingerprinted CSS/JS (`/scss/main.css`, no SRI integrity attributes) compared to production, because Docsy's templates gate minification/fingerprinting/SRI/the search-index robots tag behind `hugo.IsProduction`. This is a deliberate difference for preview builds, not a defect — don't confuse it with the bug above.
+
+### Problem: homepage looks unstyled — wrong font, wrong hero color
+
+**Symptom**: after deploying a preview build (once the contentDir fix above was already applied), the homepage had the *correct content* but wrong *styling* compared to production: body text rendered in the browser's plain system font instead of "Open Sans", and the hero banner behind "Welcome to DXers" rendered in a bright orange (`#fd7e14`) instead of the brand's terracotta (`#ba5a31`). `hugo --minify` reported zero WARN/ERROR either way.
+
+**Cause**: two Docsy SCSS variable defaults that the old pinned commit (based on Docsy v0.4.0) baked in unconditionally changed upstream by the v0.15.0 pin:
+- Docsy v0.7.0 (Bootstrap 4→5 bump) made the Google Fonts import opt-in via `$td-enable-google-fonts: false !default;` — previously it was unconditional.
+- v0.15.0's `_variables_forward.scss` forwards Bootstrap's stock `$orange: #fd7e14 !default;` instead of the old Docsy `_variables.scss`'s own `$orange: #BA5A31 !default;`.
+
+`assets/scss/_variables_project.scss` — Docsy's documented override point — was an empty placeholder, so the project silently inherited both new defaults instead of the old branding.
+
+**This was found by comparing live URLs, not by a build error** — the same method as the contentDir bug above, applied a second time: production (`https://www.dxers.ug/`) vs. a newer CloudFlare Pages preview (`https://d330fb4f.dxers-site.pages.dev/`), deployed *after* the contentDir fix. Fetching and diffing both sites' compiled CSS via `curl` showed the preview had zero occurrences of "Open Sans" anywhere, and its `.-bg-orange` rule was `color:#000;background-color:#fd7e14` versus production's `color:#fff;background-color:#ba5a31`.
+
+**Fix**: populate `assets/scss/_variables_project.scss` (see [Customization](#customization)):
+
+```scss
+$td-enable-google-fonts: true;
+$orange: #ba5a31;
+```
+
+**Verification after the fix**: rebuilt CSS's `--bs-font-sans-serif` starts with `"Open Sans"`, the Google Fonts `@import` line is back, and `.-bg-orange` compiles to `color:#fff;background-color:#ba5a31` — byte-identical to production. Still 27 pages, zero WARN/ERROR.
+
+> **Not fixed, by design — needs a maintainer decision**: the same user report also mentioned lost "word highlighting" on the homepage's lead-in paragraph. That was a `td-box--gradient` class that old Docsy's `blocks/lead.html` (and a few other templates) added, paired with a CSS gradient rule. Docsy v0.15.0 removed the class from every template that used it **and deleted the gradient CSS rule from the theme entirely** — there is no variable default to restore here, because upstream deliberately dropped the feature as part of a redesign. Re-adding it would require a new custom shortcode override plus new custom SCSS, i.e. reintroducing the kind of stale per-version override that this project's earlier `layouts/partials/head.html` / `layouts/docs/list.html` removals were meant to avoid (see [Customization](#customization)). This was intentionally left unfixed pending a maintainer decision: recreate the gradient via a custom override, or accept Docsy v0.15.0's flatter look.
 
 ### Problem: stale or locked build
 

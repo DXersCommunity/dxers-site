@@ -71,7 +71,8 @@ hugo mod tidy
 dxers-site/
 ├── assets/
 │   └── scss/                    # Custom SCSS
-│       └── _variables_project.scss
+│       └── _variables_project.scss  # NOT empty — restores Open Sans
+│                                      # font + brand orange (see Known Issue below)
 ├── content/
 │   └── en/                      # English content
 │       ├── community/           # Community pages
@@ -236,6 +237,28 @@ defaultContentLanguageInSubdir = false
 
 ⚠️ **Do not reintroduce this bug**: if `[languages]`/`[languages.en]` is ever restructured in `config.toml`, `contentDir` must stay inside the per-language table, never at the top level.
 
+### ⚠️ Known Issue (fixed): homepage lost its font and brand color after the Docsy v0.15.0 upgrade
+
+**Symptom**: after the contentDir fix above was deployed to a new CloudFlare Pages preview, the homepage rendered with the right *content* but wrong *styling* — reported as "colors, fonts and word highlighting lost on the homepage" compared to production. No build error or warning of any kind.
+
+**Root cause**: two Docsy SCSS variable defaults that the old pinned commit (based on Docsy v0.4.0) baked in unconditionally were changed upstream by the time of the v0.15.0 pin, and this project's `assets/scss/_variables_project.scss` — the designated override point — was an empty placeholder, so nothing restored them:
+
+1. **Open Sans font lost**: old Docsy's `_variables.scss` imported Google's "Open Sans" unconditionally. Starting at Docsy v0.7.0 (the same release that bumped Bootstrap 4→5), this became opt-in via `$td-enable-google-fonts: false !default;` in `themes/docsy/assets/scss/td/_variables.scss`. With the project override empty, the site silently fell back to Bootstrap 5's plain system-font stack.
+2. **Brand orange lost**: old Docsy's `_variables.scss` also set `$orange: #BA5A31 !default;` (the brand's terracotta, used by the homepage hero via `{{< blocks/cover ... color="orange" >}}` → `.-bg-orange`). v0.15.0 dropped that override entirely — `themes/docsy/assets/scss/td/_variables_forward.scss` just forwards Bootstrap's own stock `$orange: #fd7e14` (bright orange, black text).
+
+**Fix**: populate `assets/scss/_variables_project.scss` (previously empty) with:
+
+```scss
+$td-enable-google-fonts: true;
+$orange: #ba5a31;
+```
+
+**Verified after fix**: compiled CSS's `--bs-font-sans-serif` starts with `"Open Sans"` again, the Google Fonts `@import` is present, and `.-bg-orange` compiles to `color:#fff;background-color:#ba5a31` — byte-identical to production's rule. Still 27 pages, zero warnings/errors.
+
+**How this was found**: same method as the contentDir bug above — a second round of live-URL byte-comparison (production vs. a new CloudFlare Pages preview), *after* the contentDir fix had already been deployed. A clean build log again gave no signal either way.
+
+**Open item — deliberately NOT fixed**: the user's report also mentioned lost "word highlighting" (evidenziazioni). That's a `td-box--gradient` CSS class that old Docsy's `blocks/lead.html`, `blocks/section.html`, `community/list.html`, and `community_links.html` templates used to add, producing a gradient background behind lead/intro text (used on the homepage's `{{% blocks/lead color="primary" %}}` block). Docsy v0.15.0 removed the class from all of those templates **and deleted the CSS rule entirely** — this is an upstream design change, not a lost default, so there is no variable to restore. Recreating it would require a custom shortcode override plus new custom SCSS, which reintroduces exactly the stale-override maintenance risk that the earlier `layouts/partials/head.html` / `layouts/docs/list.html` removals (see "Project Structure" note above) were meant to get away from. This is left as an **open design decision for maintainers**: recreate the gradient with a new override, or accept the flatter v0.15.0 look. Do not silently patch it back in without that discussion.
+
 ### Social Links
 
 - **Discord**: https://discord.gg/RtG4nyCEDX
@@ -368,6 +391,6 @@ See [LICENSE](LICENSE) for details.
 
 ---
 
-**Last updated**: 2026-09-02 (contentDir/multilingual bug found via live-URL comparison and fixed — see "Known Issue" above)
+**Last updated**: 2026-09-02 (contentDir/multilingual bug and homepage font/color bug, both found via live-URL comparison and fixed — see "Known Issue" sections above)
 **Verified working Hugo version**: 0.154.3 Extended
 **Pinned Docsy version**: v0.15.0

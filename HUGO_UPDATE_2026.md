@@ -222,6 +222,38 @@ defaultContentLanguageInSubdir = false
 
 **Separate, unrelated note surfaced during the same live-URL comparison** (not a bug): `wrangler.toml`'s `[env.preview.vars]` sets `HUGO_ENV = "development"` for preview deployments, and Docsy's templates gate asset minification/fingerprinting/SRI hashes and the search-index-production robots tag behind `hugo.IsProduction`. So preview builds intentionally serve unminified, unfingerprinted CSS/JS with no SRI attributes, compared to production — a deliberate, working-as-designed difference for preview builds, not a defect.
 
+### 5. Homepage lost its font and brand color after the Docsy v0.15.0 upgrade
+
+**Found via live-URL comparison again** — a second round of the same technique used for issue 4, run *after* the issue-4 (contentDir) fix had already been deployed to a new CloudFlare Pages preview (`https://d330fb4f.dxers-site.pages.dev/`). The user reported the homepage had lost its colors, fonts, and "word highlighting" compared to production (`https://www.dxers.ug/`). As with issue 4, `hugo --minify` gave zero WARN/ERROR both before and after — this was only caught by fetching and byte-diffing both sites' actual compiled CSS via `curl`, then bisecting the Docsy git history between the old production pin (commit `2b3b9247`, based on tag v0.4.0) and the new v0.15.0 pin.
+
+Two distinct SCSS variable defaults changed upstream between those two points:
+
+**a) Open Sans font silently lost.** Old Docsy's `assets/scss/_variables.scss` set `$google_font_name: "Open Sans" !default;` and imported it **unconditionally** — no toggle existed. Starting at Docsy v0.7.0 (the same release that bumped Bootstrap 4→5), this became opt-in: `themes/docsy/assets/scss/td/_variables.scss` now has `$td-enable-google-fonts: false !default;`. This project's `assets/scss/_variables_project.scss` — the file Docsy's own docs/comments designate as the override point — was an empty placeholder, so the site silently inherited the new "off" default and fell back to Bootstrap 5's plain system-font stack (`system-ui, -apple-system, "Segoe UI", Roboto, ...`).
+
+Verified via `curl`: production's compiled CSS had `body{margin:0;font-family:open sans,-apple-system,...}` plus `@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,700,700i&display=swap";`. The (pre-fix) preview build had **zero** references to "Open Sans" anywhere and resolved `font-family: var(--bs-body-font-family)` to the plain system stack, with no Google Fonts import at all.
+
+**b) Brand orange silently reverted to Bootstrap's stock default.** Same pattern. Old Docsy's own `_variables.scss` defined `$orange: #BA5A31 !default;` — the project's actual brand color, used by the homepage hero cover block (`{{< blocks/cover title="Welcome to DXers" ... color="orange" >}}` in `content/en/_index.html`, which generates a `.-bg-orange` class). Docsy v0.15.0 dropped that override entirely — `themes/docsy/assets/scss/td/_variables_forward.scss` just forwards Bootstrap's own stock `$orange: #fd7e14 !default;` (bright orange, not the brand's terracotta).
+
+Verified via `curl`: the (pre-fix) preview's `.-bg-orange` rule was `color: #000; background-color: #fd7e14;` (Bootstrap's stock bright orange, black text) vs. production's `.-bg-orange{color:#fff;background-color:#ba5a31}` (the actual brand terracotta, white text) — a visibly different hero banner color.
+
+**Fix** — populate `assets/scss/_variables_project.scss` (previously empty):
+
+```scss
+// Docsy v0.7.0+ made Google Fonts opt-in (was unconditional before):
+$td-enable-google-fonts: true;
+
+// Old Docsy's _variables.scss set `$orange: #BA5A31 !default;` itself;
+// v0.15.0 just forwards Bootstrap's stock `$orange: #fd7e14` instead.
+// Restore the site's brand color explicitly.
+$orange: #ba5a31;
+```
+
+**Verified after the fix** (local `hugo --minify`, still 27 pages, zero warnings/errors): the compiled CSS's `--bs-font-sans-serif` now starts with `"Open Sans"`, the Google Fonts `@import` line is present again, and `.-bg-orange` now compiles to `color:#fff;background-color:#ba5a31` — byte-identical to production's rule.
+
+**c) "Word highlighting" (evidenziazioni) — NOT fixed, and why.** The user's third complaint was traced to a `td-box--gradient` CSS class that old Docsy's `layouts/shortcodes/blocks/lead.html` (and also `blocks/section.html`, `community/list.html`, `partials/community_links.html`) added to their wrapping `<section>` element, producing a gradient background that visually highlighted lead/intro text blocks (used on the homepage via `{{% blocks/lead color="primary" %}}...{{% /blocks/lead %}}` in `content/en/_index.html`, wrapping the "DXers is the answer to professionals, partners and users..." paragraph). Docsy v0.15.0 removed the `td-box--gradient` class from all of those templates **and deleted the corresponding CSS rule entirely** — a grep for "gradient" across v0.15.0's entire `assets/scss/` tree returns zero matches.
+
+This is a deliberate upstream design change (part of a broader theme redesign), **not** a lost/reverted variable default like (a) and (b) above — there is no SCSS variable to restore, because both the effect and the class using it were removed from the theme's own source. Restoring it would require a custom shortcode override (e.g. a project-local `layouts/shortcodes/blocks/lead.html` re-adding the class) plus new custom SCSS re-implementing the gradient rule — exactly the kind of stale, hard-to-maintain custom-override risk that issue 2 above deliberately removed from this project. **This was left intentionally unfixed this session**, flagged as an open design decision for maintainers: recreate the gradient effect with a new override, or accept the flatter v0.15.0 look. Do not silently patch it back in without that discussion.
+
 ---
 
 ## Pre-Update Checklist
@@ -889,7 +921,7 @@ Modify Hugo version and the `hugo mod tidy` step in CI/CD configuration as neede
 ---
 
 **Document created**: 2026-01-08
-**Last revision**: 2026-09-01 — corrected to real, verified end-to-end results (Hugo Modules requirement, Docsy v0.15.0 pin, known issues fixed, version number corrections)
+**Last revision**: 2026-09-02 — added known issue 5 (homepage font/brand-color regression found via a second round of live-URL comparison; gradient/"word highlighting" loss left as an open, unfixed design decision)
 **Verified Hugo version**: 0.154.3 Extended (re-check latest before future installs)
 **Verified Docsy version**: v0.15.0 (pinned — do not blindly update)
 **Status**: ✅ VERIFIED WORKING — clean `hugo --minify` build, 0 WARN / 0 ERROR
