@@ -1,7 +1,7 @@
 # Build Readiness Report
 **DXers Community Website**
-**Date**: 2026-01-08 (updated after real build verification)
-**Status**: ✅ BUILD VERIFIED (clean `hugo --minify`, zero errors/warnings)
+**Date**: 2026-01-08 (updated after real build verification; amended 2026-09-02 after a live-URL comparison found and fixed a functional bug the clean build log had missed — see "Important Nuance" section below)
+**Status**: ✅ BUILD VERIFIED (clean `hugo --minify`, zero errors/warnings) — ✅ ALSO VERIFIED against live-URL output after the `contentDir` fix (27 pages)
 
 ---
 
@@ -111,7 +111,7 @@ WARN  Config parameter '.params.ui.footer_about_disable' is DEPRECATED, use '.pa
 
 ---
 
-## ✅ Final Build Result
+## ✅ Final Build Result (as of this session)
 
 **Build attempt #6: clean success.** `hugo --minify` output:
 ```
@@ -126,6 +126,27 @@ Zero `WARN` lines, zero `ERROR` lines.
 - Total `public/` directory size ~2.9MB: 29 HTML pages, `sitemap.xml`, `robots.txt`, print versions under `_print/`, RSS `index.xml`, favicons, webfonts all present.
 
 **Dev server verification**: `hugo server` started on `127.0.0.1:1313` with Fast Render Mode active; `curl` against it returned HTTP 200 and the correct page title `DXers - The HCL DX user's group`.
+
+---
+
+## ⚠️ Important Nuance Found in a Subsequent Session: "Zero Warnings" Was Not Enough
+
+The "Final Build Result" above is a **true, accurate description of the build log** from this session — but a **later** session found that the build log being clean did **not** mean the deployed site actually worked. The root-level `index.html` spot-check above confirmed *a* page rendered with the correct title, but did not catch that the rendered homepage under `/en/` and the site-root homepage the theme actually serves to visitors at `/` were two different, differently-broken outputs.
+
+**What was found**: comparing the live production site (`https://www.dxers.ug/`) against a CloudFlare Pages preview deployment of this branch byte-for-byte showed the preview's homepage at `/` rendering as an empty `<main role=main class=td-main></main>` — no hero block, no background image, no call-to-action buttons — while production had all of that content. `hugo --minify` had reported **zero warnings and zero errors** the whole time; the bug was invisible in the build log.
+
+**Root cause**: `config.toml` had `contentDir = "content/en"` at the top level alongside an explicit `[languages.en]` table. Hugo Extended 0.154.3 silently ignores a top-level `contentDir` once `[languages]` exists (confirmed via `hugo config`, which showed it resolving to Hugo's default `contentdir = 'content'`), causing Hugo to render the site twice: once correctly under `/en/` (working only by coincidence, since `content/en/` matches Hugo's default per-language directory convention) and once as a broken, empty stub at the actual site root `/` — which is what every visitor actually reaches. Full root-cause and fix detail is in `CLAUDE.md` (Configuration section) and `HUGO_UPDATE_2026.md` ("Known Issues Encountered & Fixed", entry 4).
+
+**Fix**: move `contentDir` into `[languages.en]` instead of the top level. This has since been applied.
+
+**Corrected build result, post-fix**:
+```
+Pages: 27 | Static files: 32 | Processed images: 2 | 0 WARN | 0 ERROR
+Total in ~1.6s
+```
+Page count dropped from 29 to **27** — the two duplicate/phantom pages produced by the double-render (the broken root-level stub pages) are gone. `public/index.html` grew from 19718 bytes (the empty stub) to 22560 bytes and now contains the hero cover block, both resized `featured-background_*.jpg` images, and both call-to-action buttons. No `/en/` output directory exists anymore — `community/`, `docs/`, and `search/` sit directly under `public/`, matching production's URL structure.
+
+**Lesson for future maintainers**: a clean `hugo --minify` log (zero WARN/ERROR) is **necessary but not sufficient** evidence that the site works. It proves the build didn't error out; it does not prove the rendered pages at the URLs visitors actually use contain the right content. Spot-checking one HTML file's title, as this report's original verification did, is not enough either — the broken and working homepages both existed simultaneously in the same build. Whenever feasible, compare the actual deployed output (a preview URL vs. production, or at minimum the site-root output path) rather than relying on the build log or a single spot-check alone.
 
 ---
 
@@ -186,6 +207,7 @@ This section is now about **ongoing maintenance**, not getting a first build wor
 ---
 
 **Report Generated**: 2026-01-08
+**Amended**: 2026-09-02 — contentDir/`[languages]` bug found via live-URL comparison and fixed; page count corrected 29 → 27
 **Environment**: Linux
 **Hugo Status**: Installed and verified (v0.154.3+extended)
-**Build Status**: ✅ Clean build verified (`hugo --minify`, 0 errors, 0 warnings)
+**Build Status**: ✅ Clean build verified (`hugo --minify`, 0 errors, 0 warnings) — ✅ Deployed output verified correct after `contentDir` fix (27 pages)

@@ -93,6 +93,8 @@ The working setup combines two mechanisms:
   ```
 - `hugo mod tidy` (requires **Go**, verified with go1.24.7, and network access) resolves Bootstrap/Font Awesome into the Go module cache and writes `go.sum`.
 
+**Content directory and `[languages]`**: on this single-language site, `contentDir` must be set **inside** the `[languages.en]` table, not at the top level of `config.toml`. Once an explicit `[languages]` table exists (needed here for Docsy's multilingual template features), Hugo Extended 0.154.3 silently ignores a top-level `contentDir` and falls back to its default `content` directory — with no warning. See the "Homepage renders with an empty `<main>`" entry in [Troubleshooting](#troubleshooting) for the full incident this caused and the fix.
+
 Docsy is pinned to **v0.15.0** specifically — not "latest" and not a loose `v0.12.0+` range. Docsy v0.16.0/v0.17.0 raise `theme.toml`'s `min_version` to Hugo `0.160.1` (which does not exist yet) and restructure the repo (the Hugo module moves into a `theme/` subfolder, module path becomes `github.com/google/docsy/theme`, and layout paths move from `layouts/_partials/...` to `theme/layouts/_partials/...`). v0.15.0 only requires Hugo 0.146.0+ and matches this project's `[module.imports]` path. Before ever bumping the Docsy version, re-check the target tag's `theme.toml` `min_version` and repo layout.
 
 ### Build Flow
@@ -597,6 +599,8 @@ git submodule update --init --recursive && npm install && hugo mod tidy && hugo 
 
 Result: **29 Pages, 30 Static files, 2 Processed images, zero warnings, zero errors**, build completed in roughly **1.7–2 seconds**. `hugo server` was also verified working — the local site responded with HTTP 200 and the correct page title. Use this as the expected baseline; any warnings/errors on a fresh clone point to a setup step being skipped (most commonly `hugo mod tidy`, see [Troubleshooting](#troubleshooting)).
 
+> **Update**: this 29-page result was a **clean build log**, but the rendered output was still functionally broken — see "Homepage renders with an empty `<main>`" in [Troubleshooting](#troubleshooting). After the `contentDir`/`[languages]` fix, the verified page count is **27 pages** (the duplicate `/en/` render is gone), 32 static files, 2 processed images, still zero warnings/errors, ~1.6s. A clean build log alone does not confirm the site actually renders correctly — always spot-check the deployed output too.
+
 ## Troubleshooting
 
 ### Problem: Hugo not found
@@ -650,6 +654,36 @@ It was fixed upstream by PRs [#1890](https://github.com/google/docsy/pull/1890) 
 ```bash
 git -C themes/docsy describe --tags
 ```
+
+### Problem: homepage renders with an empty `<main>` — hero/background/buttons missing
+
+**Symptom**: the homepage at the site root `/` renders with `<main role=main class=td-main></main>` — no hero cover block, no background image, no "Join on Discord" / "Get in the next meeting" buttons. Meanwhile `/en/index.html` (which nothing links to and no visitor would think to visit) has the full, correct content. `hugo --minify` itself reports **zero WARN, zero ERROR** — the build log looks completely clean.
+
+**Cause**: `config.toml` had `contentDir = "content/en"` at the **top level**, alongside an explicit `[languages.en]` table (present for Docsy's multilingual template features, even on this single-language site). Hugo Extended 0.154.3 silently ignores a top-level `contentDir` once a `[languages]` table exists — `hugo config` confirms it resolves to Hugo's default `contentdir = 'content'` instead, with no warning. This causes Hugo to render the site **twice**: a fully correct site under `/en/` (which only worked by coincidence, because `content/en/` happens to match Hugo's own default per-language directory convention), and a second, broken, empty site at the actual site root `/` (produced by `defaultContentLanguageInSubdir = false`'s "flatten to root" logic running against the wrongly-resolved top-level contentDir). Since visitors hit `/`, not `/en/`, everyone saw the broken page.
+
+**This was found by comparing live URLs, not by a build error.** A local `hugo --minify` run was clean before and after the bug existed — the only way it surfaced was fetching and byte-comparing the deployed production site (`https://www.dxers.ug/`) against a CloudFlare Pages preview build of this branch. A clean build log is necessary but **not sufficient** evidence that the rendered site is correct.
+
+**Fix**: move `contentDir` out of the top level and into the per-language `[languages.en]` block:
+
+```toml
+# Before (broken — silently ignored by Hugo once [languages] exists):
+contentDir = "content/en"
+...
+[languages]
+[languages.en]
+  title = "..."
+
+# After (fixed):
+...
+[languages]
+[languages.en]
+  contentDir = "content/en"
+  title = "..."
+```
+
+**Verification after the fix**: no `/en/` output directory at all anymore — `community/`, `docs/`, `search/` sit directly under `public/`, matching production's URL structure. `public/index.html` grew from 19718 bytes (empty stub) to 22560 bytes and now contains the hero cover block, both resized `featured-background_*.jpg` images, and both call-to-action buttons. Page count dropped from 29 to **27** (the two duplicate/phantom pages produced by the double-render are gone). 32 static files, 2 processed images, zero WARN/ERROR, ~1.6s build.
+
+> **Note, not a bug**: preview deployments (CloudFlare Pages, `HUGO_ENV=development` per `wrangler.toml`) intentionally serve unminified, unfingerprinted CSS/JS (`/scss/main.css`, no SRI integrity attributes) compared to production, because Docsy's templates gate minification/fingerprinting/SRI/the search-index robots tag behind `hugo.IsProduction`. This is a deliberate difference for preview builds, not a defect — don't confuse it with the bug above.
 
 ### Problem: stale or locked build
 

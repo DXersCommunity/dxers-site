@@ -179,6 +179,49 @@ Surfaced during the real build (in addition to two deprecations already fixed in
 - **`algolia_docsearch = false`** (top-level key) — deprecated; Hugo's warning points to `[params.search.algolia]` instead. Since Algolia search is not actually used on this site, the key was simply removed (left as a comment explaining why, rather than migrated).
 - **`params.ui.footer_about_disable = false`** — deprecated. The fix is **not** a simple rename: the replacement key `footer_about_enable` has **inverted boolean logic**. `footer_about_disable = false` correctly becomes `footer_about_enable = true` (not `false`).
 
+### 4. Top-level `contentDir` silently ignored once `[languages]` exists → homepage rendered empty at `/`
+
+**Found via a different method than issues 1–3 above**: issues 1–3 were all caught by local `hugo --minify` failing outright with an `ERROR` line. This one produced **zero WARN, zero ERROR** — `hugo --minify` looked completely clean. It was only caught in a later session by fetching and byte-comparing two **live URLs**: production (`https://www.dxers.ug/`) against a CloudFlare Pages preview deployment of this branch (`https://006f66f1.dxers-site.pages.dev/`). This is worth calling out explicitly: **a clean local build log is not proof the deployed output is correct** — testing the actual rendered pages (ideally a real deployed URL, not just the build log) matters just as much as a warning-free build.
+
+**Symptom**: the preview's homepage at the site root `/` — what every visitor actually lands on — rendered as `<main role=main class=td-main></main>`, completely empty: no hero cover block, no background image, no "Join on Discord" / "Get in the next meeting" buttons. Production's homepage, by contrast, had all of that content. The real, fully-rendered homepage content was sitting at `/en/index.html`, a URL nothing links to and no visitor would ever navigate to.
+
+**Root cause**: `config.toml` declared `contentDir = "content/en"` at the **top level**, alongside an explicit `[languages.en]` table (kept for Docsy's multilingual template features, even though this site only has one language). Running `hugo config` on Hugo Extended 0.154.3 showed that Hugo **silently ignores a top-level `contentDir` once a `[languages]` table is present** — it resolves to Hugo's own default `contentdir = 'content'` instead, no warning or error emitted anywhere. This made Hugo render the site **twice**:
+1. A fully correct site under `/en/` — this only worked by coincidence, because `content/en/` happens to match Hugo's own default per-language content-directory convention (directory name == language code), not because the top-level config override was doing anything.
+2. A second, broken, empty site at the actual site root `/` — produced by `defaultContentLanguageInSubdir = false`'s "flatten to root" logic running against the wrongly-resolved top-level contentDir, yielding a stub Home page with no content.
+
+Since visitors go to `/`, not `/en/`, every visitor to the live site saw the broken, empty homepage.
+
+**Fix**: move `contentDir` out of the top-level config and into the per-language `[languages.en]` block, which is the shape Hugo actually honors once explicit language tables exist:
+
+```toml
+# Before (broken — silently ignored by Hugo once [languages] exists):
+contentDir = "content/en"
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = false
+...
+[languages]
+[languages.en]
+  title = "..."
+
+# After (fixed):
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = false
+...
+[languages]
+[languages.en]
+  contentDir = "content/en"
+  title = "..."
+```
+
+**Verified after the fix** (local `hugo --minify`, Hugo Extended 0.154.3, Docsy v0.15.0):
+- No `/en/` output directory at all anymore — `community/`, `docs/`, `search/` now sit directly under the site root (`public/community/`, `public/docs/`, etc.), matching production's URL structure exactly.
+- Root `public/index.html` grew from 19718 bytes (the empty stub) to 22560 bytes, and now contains the hero cover block (`td-cover-block` class), both resized `featured-background_*.jpg` images (Hugo's image processing pipeline correctly resizing `content/en/featured-background.jpg`), and both call-to-action buttons.
+- Page count went from **29 to 27** (the two duplicate/phantom pages from the double-render are gone).
+- 32 static files, 2 processed images, zero WARN, zero ERROR, ~1.6s build.
+- Spot-checked `community/index.html` and `docs/index.html` — both render real content correctly.
+
+**Separate, unrelated note surfaced during the same live-URL comparison** (not a bug): `wrangler.toml`'s `[env.preview.vars]` sets `HUGO_ENV = "development"` for preview deployments, and Docsy's templates gate asset minification/fingerprinting/SRI hashes and the search-index-production robots tag behind `hugo.IsProduction`. So preview builds intentionally serve unminified, unfingerprinted CSS/JS with no SRI attributes, compared to production — a deliberate, working-as-designed difference for preview builds, not a defect.
+
 ---
 
 ## Pre-Update Checklist
