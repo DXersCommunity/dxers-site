@@ -4,3 +4,22 @@ Add styles or override variables from the theme here.
 
 */
 
+// Restore branding that Docsy stopped defaulting to as of v0.7.0 (Bootstrap 5
+// upgrade). Production (pinned to the old Docsy v0.4.0-era commit) got these
+// for free because that version baked them in unconditionally; v0.15.0 made
+// both opt-in / reverted to plain Bootstrap defaults. Without this file,
+// the homepage silently lost the "Open Sans" body font (fell back to the
+// system font stack) and the hero's brand orange (fell back to Bootstrap's
+// stock #fd7e14). See CLAUDE.md for the full root-cause writeup.
+
+// Docsy v0.7.0+ made Google Fonts opt-in (was unconditional before):
+// themes/docsy/assets/scss/td/_variables.scss
+$td-enable-google-fonts: true;
+
+// Old Docsy's _variables.scss set `$orange: #BA5A31 !default;` itself;
+// v0.15.0 just forwards Bootstrap's stock `$orange: #fd7e14` instead
+// (themes/docsy/assets/scss/td/_variables_forward.scss). Restore the
+// site's brand color explicitly, used by the homepage hero
+// (`{{< blocks/cover color="orange" >}}` -> `.-bg-orange`).
+$orange: #ba5a31;
+
