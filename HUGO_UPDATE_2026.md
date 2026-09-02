@@ -252,7 +252,17 @@ $orange: #ba5a31;
 
 **c) "Word highlighting" (evidenziazioni) — NOT fixed, and why.** The user's third complaint was traced to a `td-box--gradient` CSS class that old Docsy's `layouts/shortcodes/blocks/lead.html` (and also `blocks/section.html`, `community/list.html`, `partials/community_links.html`) added to their wrapping `<section>` element, producing a gradient background that visually highlighted lead/intro text blocks (used on the homepage via `{{% blocks/lead color="primary" %}}...{{% /blocks/lead %}}` in `content/en/_index.html`, wrapping the "DXers is the answer to professionals, partners and users..." paragraph). Docsy v0.15.0 removed the `td-box--gradient` class from all of those templates **and deleted the corresponding CSS rule entirely** — a grep for "gradient" across v0.15.0's entire `assets/scss/` tree returns zero matches.
 
-This is a deliberate upstream design change (part of a broader theme redesign), **not** a lost/reverted variable default like (a) and (b) above — there is no SCSS variable to restore, because both the effect and the class using it were removed from the theme's own source. Restoring it would require a custom shortcode override (e.g. a project-local `layouts/shortcodes/blocks/lead.html` re-adding the class) plus new custom SCSS re-implementing the gradient rule — exactly the kind of stale, hard-to-maintain custom-override risk that issue 2 above deliberately removed from this project. **This was left intentionally unfixed this session**, flagged as an open design decision for maintainers: recreate the gradient effect with a new override, or accept the flatter v0.15.0 look. Do not silently patch it back in without that discussion.
+This is a deliberate upstream design change (part of a broader theme redesign), **not** a lost/reverted variable default like (a) and (b) above — there is no SCSS variable to restore, because both the effect and the class using it were removed from the theme's own source. Restoring it would require a custom shortcode override (e.g. a project-local `layouts/shortcodes/blocks/lead.html` re-adding the class) plus new custom SCSS re-implementing the gradient rule — exactly the kind of stale, hard-to-maintain custom-override risk that issue 2 above deliberately removed from this project. **Decision: maintainers reviewed this tradeoff and chose to accept the flatter v0.15.0 look** rather than reintroduce a custom override. Closed — no further action planned.
+
+### 6. Homepage lead paragraph rendered literal `**asterisks**` instead of bold text
+
+**Symptom**: the homepage's lead-in paragraph ("**DXers** is the answer to **professionals**, **partners** and **users**...") displayed the literal markdown syntax instead of `<strong>` bold text.
+
+**Root cause**: `content/en/_index.html` used the `.html` content-file extension. Hugo only runs Goldmark (its markdown renderer) over a page's content when the file itself has a recognized markdown extension (`.md`/`.markdown`); for `.html` content files, Hugo treats the content as raw HTML and does **not** markdown-render it — including the *inner* text of `{{% %}}` (percent-delimited) shortcodes. Confirmed by debug-printing `.Inner`'s raw Go value from inside the `blocks/lead` shortcode: it was the literal, un-rendered markdown string (`"**DXers** is the answer..."`), not pre-rendered HTML. Docsy v0.15.0's `blocks/lead.html` shortcode outputs `.Inner` directly with no `markdownify` filter, relying on the page-level renderer having already converted the markdown — which only happens for `.md` files. Docsy's own upstream demo site (docsy.dev) uses `_index.md` (with markdown link/emphasis syntax) for this exact shortcode, confirming `.md` is the expected convention.
+
+**Fix**: renamed `content/en/_index.html` → `content/en/_index.md`. No content, front matter, or shortcode changes needed — TOML front matter (`+++...+++`) and the raw HTML in the `{{< blocks/cover >}}` call (angle-bracket shortcodes are never markdown-rendered, so unaffected either way) both work identically in a `.md` file, and `config.toml`'s `[markup.goldmark.renderer] unsafe = true` was already set, so existing inline HTML kept rendering correctly.
+
+**Verified**: `hugo --minify` still produces 27 pages, zero warnings/errors. `<strong>DXers</strong>`, `<strong>professionals</strong>`, etc. now render correctly; no other `.html` content files exist in this project, so this was an isolated case.
 
 ---
 
@@ -921,7 +931,7 @@ Modify Hugo version and the `hugo mod tidy` step in CI/CD configuration as neede
 ---
 
 **Document created**: 2026-01-08
-**Last revision**: 2026-09-02 — added known issue 5 (homepage font/brand-color regression found via a second round of live-URL comparison; gradient/"word highlighting" loss left as an open, unfixed design decision)
+**Last revision**: 2026-09-02 — added known issue 5 (homepage font/brand-color regression found via a second round of live-URL comparison; gradient/"word highlighting" loss decided by maintainers as accepted, not fixed) and known issue 6 (homepage lead paragraph rendering literal `**asterisks**` instead of bold — fixed by renaming `content/en/_index.html` to `_index.md`)
 **Verified Hugo version**: 0.154.3 Extended (re-check latest before future installs)
 **Verified Docsy version**: v0.15.0 (pinned — do not blindly update)
 **Status**: ✅ VERIFIED WORKING — clean `hugo --minify` build, 0 WARN / 0 ERROR
