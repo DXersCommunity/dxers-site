@@ -18,7 +18,13 @@ enableGitInfo = true
     path = "github.com/google/docsy"
 
 # Language settings
-contentDir = "content/en"
+# NOTE: contentDir is set per-language below (in [languages.en]), NOT here.
+# A top-level contentDir is silently ignored by Hugo 0.154.3 once a
+# [languages] table is present — `hugo config` resolves contentdir to the
+# default "content" regardless of what's set here, which produced a
+# duplicate, EMPTY root-level Home page (public/index.html) alongside the
+# correctly rendered public/en/index.html. See CLAUDE.md for the full
+# root-cause writeup.
 defaultContentLanguage = "en"
 defaultContentLanguageInSubdir = false
 # Useful when translating.
@@ -60,6 +66,7 @@ anchor = "smart"
 [languages]
 
 [languages.en]
+contentDir = "content/en"
 title = "DXers - The HCL DX user's group"
 description = "DXers - The HCL DX user's group"
 languageName ="English"
