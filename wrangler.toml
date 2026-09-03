@@ -35,6 +35,20 @@
 # Only add a field back here after confirming it's actually accepted by
 # Pages' wrangler.toml validator — the error message above is the ground
 # truth; the Cloudflare docs page linked at the top lists the current set.
+#
+# ANOTHER REAL FAILURE, found on the first production deploy after the fix
+# above: setting NODE_ENV=production here made CloudFlare's automatic
+# `npm clean-install` (and our own `npm install` in the build command) skip
+# devDependencies entirely ("audited 1 package" in the build log — i.e.
+# zero deps actually installed), because npm treats NODE_ENV=production as
+# "skip devDependencies" by default. autoprefixer and postcss-cli are BOTH
+# devDependencies in package.json, and Hugo's PostCSS integration (used by
+# Docsy's SCSS pipeline) needs the `postcss` binary at build time regardless
+# of environment — the build then failed with:
+#   POSTCSS: ... binary with name "postcss" not found using npx
+# Fix: removed NODE_ENV from both environments below. Hugo's own prod/dev
+# distinction is controlled entirely by HUGO_ENV, not NODE_ENV — nothing
+# here actually needs NODE_ENV set, and it was actively harmful.
 
 # Project name (must match the CloudFlare Pages project name)
 name = "dxers-site"
@@ -58,7 +72,6 @@ HUGO_VERSION = "0.154.3"
 HUGO_ENV = "production"
 HUGO_ENABLEGITINFO = "true"
 NODE_VERSION = "22"
-NODE_ENV = "production"
 GO_VERSION = "1.21"
 SITE_URL = "https://www.dxers.ug"
 BASE_URL = "https://www.dxers.ug/"
@@ -68,5 +81,4 @@ HUGO_VERSION = "0.154.3"
 HUGO_ENV = "development"
 HUGO_ENABLEGITINFO = "false"
 NODE_VERSION = "22"
-NODE_ENV = "development"
 GO_VERSION = "1.21"

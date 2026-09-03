@@ -243,7 +243,6 @@ These are read by CloudFlare Pages' build environment automatically — no Dashb
 | `NODE_VERSION` | `22` | Node.js version |
 | `GO_VERSION` | `1.21` | Required for `hugo mod tidy` |
 | `HUGO_ENV` | `production` | Hugo environment |
-| `NODE_ENV` | `production` | Node environment |
 
 #### Preview Variables
 
@@ -253,7 +252,8 @@ These are read by CloudFlare Pages' build environment automatically — no Dashb
 | `NODE_VERSION` | `22` | Node.js version |
 | `GO_VERSION` | `1.21` | Required for `hugo mod tidy` |
 | `HUGO_ENV` | `development` | Hugo environment |
-| `NODE_ENV` | `development` | Node environment |
+
+⚠️ **Deliberately no `NODE_ENV` here.** Setting `NODE_ENV=production` made `npm install` skip devDependencies (npm's default behavior for that value) — and `autoprefixer`/`postcss-cli`, both devDependencies, are required at build time for Hugo's PostCSS step regardless of environment. This caused a real production build failure (see Troubleshooting #7 below). Hugo's own prod/dev distinction is controlled entirely by `HUGO_ENV`, so `NODE_ENV` isn't needed at all here.
 
 ### Secrets (set only in the Dashboard, never in wrangler.toml)
 
@@ -462,6 +462,27 @@ cat public/_headers
 cat public/_redirects
 ```
 If these files are missing from `public/`, check that `static/_headers` and `static/_redirects` exist at the project root and that `config.toml` doesn't override `staticDir`.
+
+#### 7. Build Fails: "POSTCSS: ... binary with name \"postcss\" not found using npx"
+
+This happened on the first real production deploy after the wrangler.toml fix above. Full log excerpt:
+
+```
+Installing project dependencies: npm clean-install --progress=false
+up to date, audited 1 package in 557ms
+found 0 vulnerabilities
+...
+ERROR error building site: ... POSTCSS: failed to transform "/scss/main.css"
+(text/css). You need to install PostCSS. See
+https://gohugo.io/functions/css/postcss/: binary with name "postcss" not
+found using npx
+```
+
+**Cause:** `wrangler.toml`'s `[env.production.vars]` (and `[env.preview.vars]`) had `NODE_ENV = "production"` set. npm treats `NODE_ENV=production` as an implicit "skip devDependencies" signal — `autoprefixer` and `postcss-cli` are both listed under `devDependencies` in `package.json`, so both CloudFlare's automatic pre-install step and this project's own `npm install` in the build command installed **zero** dependencies ("audited 1 package" — just the root package itself, no devDependencies). Hugo's PostCSS integration (used by Docsy's SCSS pipeline) then couldn't find the `postcss` binary at build time.
+
+Reproduced locally: `rm -rf node_modules && NODE_ENV=production npm install` → `audited 1 package`, no `postcss`/`autoprefixer` binaries in `node_modules/.bin/`. Removing `NODE_ENV` and reinstalling fixed it immediately.
+
+**Solution:** removed `NODE_ENV` from both environments in `wrangler.toml`. Hugo's own production/development distinction is controlled entirely by `HUGO_ENV` — nothing in this project actually needs `NODE_ENV` set, and setting it to `"production"` is actively harmful here. If you ever need `NODE_ENV` for something else, set the build command to explicitly include dev dependencies instead: `npm install --include=dev && ...`.
 
 ---
 
